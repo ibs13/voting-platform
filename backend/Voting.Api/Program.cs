@@ -1,3 +1,6 @@
+using Microsoft.EntityFrameworkCore;
+using Voting.Api.Data;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -6,6 +9,11 @@ if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddOpenApi();
 }
+
+builder.Services.AddDbContext<AppDbContext>(opt =>
+{
+    opt.UseSqlite(builder.Configuration.GetConnectionString("Default"));
+});
 
 var app = builder.Build();
 
