@@ -60,16 +60,6 @@ public class AuthController : ControllerBase
 
         await _otpSender.SendAsync(email,otp);
 
-        var all = await _db.OtpChallenges
-            .OrderByDescending(c => c.CreatedAt)
-            .Select(c => new { c.Id, c.UsedAt, c.CreatedAt, c.ExpiresAt })
-            .ToListAsync();
-
-        foreach (var item in all)
-        {
-            Console.WriteLine($"Id={item.Id}, UsedAt={item.UsedAt}, CreatedAt={item.CreatedAt}, ExpiresAt={item.ExpiresAt}");
-        }
-
         return Ok(new {message ="OTP sent (dev mode prints to console)"});
 
     }
