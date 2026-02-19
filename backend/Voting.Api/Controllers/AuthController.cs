@@ -50,7 +50,8 @@ public class AuthController : ControllerBase
             ElectionId = dto.ElectionId,
             Email = email,
             OtpHash = otpHash,
-            ExpiresAt = DateTimeOffset.UtcNow.AddMinutes(10),
+            CreatedAt = DateTime.UtcNow,
+            ExpiresAt = DateTime.UtcNow.AddMinutes(10),
             Attempts = 0
         };
 
@@ -58,6 +59,16 @@ public class AuthController : ControllerBase
         await _db.SaveChangesAsync();
 
         await _otpSender.SendAsync(email,otp);
+
+        var all = await _db.OtpChallenges
+            .OrderByDescending(c => c.CreatedAt)
+            .Select(c => new { c.Id, c.UsedAt, c.CreatedAt, c.ExpiresAt })
+            .ToListAsync();
+
+        foreach (var item in all)
+        {
+            Console.WriteLine($"Id={item.Id}, UsedAt={item.UsedAt}, CreatedAt={item.CreatedAt}, ExpiresAt={item.ExpiresAt}");
+        }
 
         return Ok(new {message ="OTP sent (dev mode prints to console)"});
 
@@ -70,15 +81,17 @@ public class AuthController : ControllerBase
 
         var challenge = await _db.OtpChallenges
             .Where(c => c.ElectionId == dto.ElectionId && c.Email == email)
-            .OrderByDescending(c => c.Id)
+            .OrderByDescending(c => c.CreatedAt)
             .FirstOrDefaultAsync();
 
         if (challenge is null) return BadRequest("No OTP request found.");
         if (challenge.UsedAt is not null) return BadRequest("OTP already used.");
-        if (DateTimeOffset.UtcNow > challenge.ExpiresAt) return BadRequest("OTP expired.");
+        if (DateTime.UtcNow > challenge.ExpiresAt) return BadRequest("OTP expired.");
         if (challenge.Attempts >= 5) return BadRequest("Too many attempts.");
 
         challenge.Attempts += 1;
+
+        
 
         var ok = BCrypt.Net.BCrypt.Verify(dto.Otp, challenge.OtpHash);
         if (!ok)
@@ -87,7 +100,8 @@ public class AuthController : ControllerBase
             return BadRequest("Invalid OTP.");
         }
 
-        challenge.UsedAt = DateTimeOffset.UtcNow;
+        challenge.UsedAt = DateTime.UtcNow;
+
         await _db.SaveChangesAsync();
 
         var token = _jwt.CreateVoterToken(dto.ElectionId, email);
