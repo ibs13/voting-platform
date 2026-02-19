@@ -1,10 +1,17 @@
+import { Route, Routes } from "react-router-dom";
+import { EmailPage } from "./pages/EmailPage";
+import { OtpPage } from "./pages/OtpPage";
+import { BallotPage } from "./pages/BallotPage";
+import { SuccessPage } from "./pages/SuccessPage";
+
 const App = () => {
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <h1 className="text-3xl font-bold text-blue-600">
-        Voting Platform Frontend Ready
-      </h1>
-    </div>
+    <Routes>
+      <Route path="/" element={<EmailPage />} />
+      <Route path="/otp" element={<OtpPage />} />
+      <Route path="/ballot" element={<BallotPage />} />
+      <Route path="/success" element={<SuccessPage />} />
+    </Routes>
   );
 };
 
