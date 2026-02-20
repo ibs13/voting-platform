@@ -26,6 +26,14 @@ export const BallotPage = () => {
 
     const fetchBallot = async () => {
       try {
+        // Check vote status
+        const statusRes = await api.get(`/votes/status/${electionId}`);
+
+        if (statusRes.data.hasVoted) {
+          navigate("/success");
+          return;
+        }
+
         const res = await api.get(`/elections/${electionId}/ballot`);
         setCandidates(res.data.candidates);
       } catch (err: any) {
