@@ -30,7 +30,12 @@ export const OtpPage = () => {
       const token = response.data.token;
       setToken(token);
 
-      navigate("/ballot");
+      if (response) {
+        localStorage.setItem("token", token);
+        localStorage.setItem("electionId", electionId);
+        localStorage.setItem("email", email);
+        navigate("/ballot");
+      }
     } catch (err: any) {
       setError(err.response?.data || "Invalid OTP");
     } finally {

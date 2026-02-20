@@ -14,18 +14,41 @@ type AuthState = {
 const AuthContext = createContext<AuthState | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [electionId, setElectionId] = useState<string | null>(null);
-  const [email, setEmail] = useState<string | null>(null);
-  const [token, setTokenState] = useState<string | null>(null);
+  const [electionId, setElectionIdState] = useState<string | null>(() =>
+    localStorage.getItem("electionId"),
+  );
+
+  const [email, setEmailState] = useState<string | null>(() =>
+    localStorage.getItem("email"),
+  );
+
+  const [token, setTokenState] = useState<string | null>(() => {
+    const stored = localStorage.getItem("token");
+    if (stored) {
+      setAuthToken(stored); // 🔥 set axios header immediately
+    }
+    return stored;
+  });
+
+  const setElectionId = (id: string) => {
+    setElectionIdState(id);
+    localStorage.setItem("electionId", id);
+  };
+
+  const setEmail = (value: string) => {
+    setEmailState(value);
+    localStorage.setItem("email", value);
+  };
 
   const setToken = (value: string) => {
     setTokenState(value);
+    localStorage.setItem("token", value);
     setAuthToken(value);
   };
 
-  useEffect(() => {
-    if (token) setAuthToken(token);
-  }, [token]);
+  // useEffect(() => {
+  //   if (token) setAuthToken(token);
+  // }, [token]);
 
   return (
     <AuthContext.Provider
