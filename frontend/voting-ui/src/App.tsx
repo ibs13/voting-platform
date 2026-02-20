@@ -4,6 +4,7 @@ import { OtpPage } from "./pages/OtpPage";
 import { BallotPage } from "./pages/BallotPage";
 import { SuccessPage } from "./pages/SuccessPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { ResultPage } from "./pages/ResultPage";
 
 const App = () => {
   return (
@@ -24,6 +25,15 @@ const App = () => {
         element={
           <ProtectedRoute>
             <SuccessPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/results"
+        element={
+          <ProtectedRoute>
+            <ResultPage />
           </ProtectedRoute>
         }
       />
