@@ -28,7 +28,12 @@ public static class DbSeeder
 
         db.Voters.AddRange(
             new Voter { ElectionId = election.Id, Email = "test1@example.com", IsEligible = true },
-            new Voter { ElectionId = election.Id, Email = "test2@example.com", IsEligible = true }
+            new Voter { ElectionId = election.Id, Email = "test2@example.com", IsEligible = true },
+            new Voter { ElectionId = election.Id, Email = "test3@example.com", IsEligible = true },
+            new Voter { ElectionId = election.Id, Email = "test4@example.com", IsEligible = true },
+            new Voter { ElectionId = election.Id, Email = "test5@example.com", IsEligible = true },
+            new Voter { ElectionId = election.Id, Email = "test6@example.com", IsEligible = true },
+            new Voter { ElectionId = election.Id, Email = "test7@example.com", IsEligible = true }
         );
 
         await db.SaveChangesAsync();

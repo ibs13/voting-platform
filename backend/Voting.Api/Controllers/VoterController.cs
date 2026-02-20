@@ -121,4 +121,32 @@ public class VotesController : ControllerBase
             return Conflict("You have already voted or your ballot was invalid.");
         }
     }
+
+    [Authorize(Roles = "voter")]
+    [HttpGet("status/{electionId:guid}")]
+    public async Task<IActionResult> GetVoteStatus(Guid electionId)
+    {   
+        var tokenElectionId = UserClaims.GetElectionId(User);
+        if(tokenElectionId != electionId)
+            return Forbid();
+
+        var email = UserClaims.GetEmail(User);
+
+        var voter = await _db.Voters
+            .AsNoTracking()
+            .FirstOrDefaultAsync(v => 
+                v.ElectionId == electionId &&
+                v.Email == email &&
+                v.IsEligible);
+
+        if (voter is null)
+            return BadRequest("Not eligible");
+
+        var hasVoted = await _db.VoteLocks
+            .AnyAsync(vl =>
+                vl.ElectionId == electionId &&
+                vl.VoterId == voter.Id);
+
+        return Ok(new { hasVoted });
+    }
 }
