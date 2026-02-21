@@ -34,7 +34,7 @@ public class ResultsController : ControllerBase
             return NotFound("Election not found.");
 
         if (election.Status != "Closed"){
-            return Forbid("Results are not available until the election is closed.");
+            return StatusCode(403, "Results are not available until the election is closed.");
         }
 
         // Turnout

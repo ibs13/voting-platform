@@ -52,7 +52,10 @@ export const ResultsPage = () => {
   }, [electionId]);
 
   if (loading) return <div className="p-10">Loading results...</div>;
-  if (error) return <div className="p-10 text-red-500">{error}</div>;
+  if (error)
+    return (
+      <div className="p-10 text-2xl text-red-500 font-semibold">{error}</div>
+    );
   if (!data) return null;
 
   const turnoutPercentage =
