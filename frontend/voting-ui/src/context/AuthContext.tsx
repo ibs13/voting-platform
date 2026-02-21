@@ -46,10 +46,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAuthToken(value);
   };
 
-  // useEffect(() => {
-  //   if (token) setAuthToken(token);
-  // }, [token]);
-
   return (
     <AuthContext.Provider
       value={{ electionId, email, token, setElectionId, setEmail, setToken }}

@@ -2,7 +2,7 @@ namespace Voting.Api.Dtos;
 
 public record OfficeResultDto(
     string Office,
-    List<CandidateResultDto> Result,
+    List<CandidateResultDto> Results,
     List<Guid> WinnerCandidateIds,
     bool IsTie
 );
@@ -17,6 +17,6 @@ public record ElectionResultsDto(
     Guid ElectionId,
     string ElectionName,
     int TotalEligibleVoters,
-    int TotalVoteCast,
+    int TotalVotesCast,
     List<OfficeResultDto> Offices
 );
