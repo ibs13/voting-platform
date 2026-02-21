@@ -6,7 +6,7 @@ export default function ProtectedLayout() {
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
       <header className="bg-white shadow px-6 py-4 flex justify-between items-center">
-        <h1 className="font-bold text-lg">Alumni Voting System</h1>
+        <h1 className="font-bold text-lg">PUSTDS Alumni Voting System</h1>
 
         <LogoutButton />
       </header>

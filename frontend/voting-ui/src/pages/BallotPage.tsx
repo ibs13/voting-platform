@@ -79,9 +79,6 @@ export const BallotPage = () => {
 
   return (
     <>
-      <div className="flex justify-end mb-4">
-        <LogoutButton />
-      </div>
       <div className="min-h-screen bg-gray-100 flex justify-center py-10">
         <form
           onSubmit={handleSubmit}

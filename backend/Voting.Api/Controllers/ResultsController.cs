@@ -33,6 +33,10 @@ public class ResultsController : ControllerBase
         if (election is null)
             return NotFound("Election not found.");
 
+        if (election.Status != "Closed"){
+            return Forbid("Results are not available until the election is closed.");
+        }
+
         // Turnout
         var totalEligible = await _db.Voters
             .CountAsync(v => v.ElectionId == electionId && v.IsEligible);
