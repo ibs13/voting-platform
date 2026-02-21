@@ -38,7 +38,11 @@ export const ResultsPage = () => {
         const res = await api.get(`/results/${electionId}`);
         setData(res.data);
       } catch (err: any) {
-        setError(err.response?.data || "Failed to load results");
+        if (err.response?.status === 403) {
+          setError("Results will be available once the election is closed.");
+        } else {
+          setError(err.response?.data || "Failed to load results");
+        }
       } finally {
         setLoading(false);
       }
