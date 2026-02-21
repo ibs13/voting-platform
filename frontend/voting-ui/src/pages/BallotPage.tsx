@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useEffect, useState } from "react";
 import { api } from "../api/axios";
+import { LogoutButton } from "../components/LogoutButton";
 
 type Candidate = {
   id: string;
@@ -77,84 +78,91 @@ export const BallotPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex justify-center py-10">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-8 rounded shadow-md w-[600px]"
-      >
-        <h2 className="text-2xl font-bold mb-6 text-center">Cast Your Vote</h2>
-
-        {/* President */}
-
-        <div className="mb-6">
-          <label className="font-semibold">President</label>
-          <select
-            value={president}
-            onChange={(e) => setPresident(e.target.value)}
-            className="w-full border p-2 rounded mt-2"
-          >
-            <option value="">Select candidate</option>
-            {candidates.map((c) => (
-              <option
-                key={c.id}
-                value={c.id}
-                disabled={c.id === secretary || c.id === treasurer}
-              >
-                {c.fullName} {c.batch ? `(${c.batch})` : ""}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Secretary */}
-        <div className="mb-6">
-          <label className="font-semibold">Secretary</label>
-          <select
-            value={secretary}
-            onChange={(e) => setSecretary(e.target.value)}
-            className="w-full border p-2 rounded mt-2"
-          >
-            <option value="">Select candidate</option>
-            {candidates.map((c) => (
-              <option
-                key={c.id}
-                value={c.id}
-                disabled={c.id === president || c.id === treasurer}
-              >
-                {c.fullName} {c.batch ? `(${c.batch})` : ""}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Treasurer */}
-        <div className="mb-6">
-          <label className="font-semibold">Treasurer</label>
-          <select
-            value={treasurer}
-            onChange={(e) => setTreasurer(e.target.value)}
-            className="w-full border p-2 rounded mt-2"
-          >
-            <option value="">Select candidate</option>
-            {candidates.map((c) => (
-              <option
-                key={c.id}
-                value={c.id}
-                disabled={c.id === president || c.id === secretary}
-              >
-                {c.fullName} {c.batch ? `(${c.batch})` : ""}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <button
-          type="submit"
-          className="w-full bg-green-600 text-white py-3 rounded hover:bg-green-700"
+    <>
+      <div className="flex justify-end mb-4">
+        <LogoutButton />
+      </div>
+      <div className="min-h-screen bg-gray-100 flex justify-center py-10">
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white p-8 rounded shadow-md w-[600px]"
         >
-          Submit Vote
-        </button>
-      </form>
-    </div>
+          <h2 className="text-2xl font-bold mb-6 text-center">
+            Cast Your Vote
+          </h2>
+
+          {/* President */}
+
+          <div className="mb-6">
+            <label className="font-semibold">President</label>
+            <select
+              value={president}
+              onChange={(e) => setPresident(e.target.value)}
+              className="w-full border p-2 rounded mt-2"
+            >
+              <option value="">Select candidate</option>
+              {candidates.map((c) => (
+                <option
+                  key={c.id}
+                  value={c.id}
+                  disabled={c.id === secretary || c.id === treasurer}
+                >
+                  {c.fullName} {c.batch ? `(${c.batch})` : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Secretary */}
+          <div className="mb-6">
+            <label className="font-semibold">Secretary</label>
+            <select
+              value={secretary}
+              onChange={(e) => setSecretary(e.target.value)}
+              className="w-full border p-2 rounded mt-2"
+            >
+              <option value="">Select candidate</option>
+              {candidates.map((c) => (
+                <option
+                  key={c.id}
+                  value={c.id}
+                  disabled={c.id === president || c.id === treasurer}
+                >
+                  {c.fullName} {c.batch ? `(${c.batch})` : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Treasurer */}
+          <div className="mb-6">
+            <label className="font-semibold">Treasurer</label>
+            <select
+              value={treasurer}
+              onChange={(e) => setTreasurer(e.target.value)}
+              className="w-full border p-2 rounded mt-2"
+            >
+              <option value="">Select candidate</option>
+              {candidates.map((c) => (
+                <option
+                  key={c.id}
+                  value={c.id}
+                  disabled={c.id === president || c.id === secretary}
+                >
+                  {c.fullName} {c.batch ? `(${c.batch})` : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <button
+            type="submit"
+            className="w-full bg-green-600 text-white py-3 rounded hover:bg-green-700"
+          >
+            Submit Vote
+          </button>
+        </form>
+      </div>
+    </>
   );
 };
