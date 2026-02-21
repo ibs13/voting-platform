@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useState } from "react";
 import { setAuthToken } from "../api/axios";
 
 type AuthState = {
@@ -9,6 +9,7 @@ type AuthState = {
   setElectionId: (id: string) => void;
   setEmail: (email: string) => void;
   setToken: (token: string) => void;
+  logout: () => void;
 };
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
@@ -46,9 +47,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAuthToken(value);
   };
 
+  const logout = () => {
+    setTokenState(null);
+    setElectionId("");
+    setEmail("");
+
+    localStorage.removeItem("token");
+    localStorage.removeItem("electionId");
+    localStorage.removeItem("email");
+
+    setAuthToken(null);
+  };
+
   return (
     <AuthContext.Provider
-      value={{ electionId, email, token, setElectionId, setEmail, setToken }}
+      value={{
+        electionId,
+        email,
+        token,
+        setElectionId,
+        setEmail,
+        setToken,
+        logout,
+      }}
     >
       {children}
     </AuthContext.Provider>
