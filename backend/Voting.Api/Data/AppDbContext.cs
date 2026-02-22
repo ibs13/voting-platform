@@ -14,6 +14,7 @@ public class AppDbContext : DbContext
     public DbSet<VoteLock> VoteLocks => Set<VoteLock>();
     public DbSet<BallotSubmission> BallotSubmissions => Set<BallotSubmission>();
     public DbSet<Vote> Votes => Set<Vote>();
+    public DbSet<AdminUser> AdminUsers => Set<AdminUser>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -33,6 +34,10 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<Vote>()
             .HasIndex(v => new { v.BallotSubmissionId, v.CandidateId })
+            .IsUnique();
+
+        modelBuilder.Entity<AdminUser>()
+            .HasIndex(a => a.Username)
             .IsUnique();
     }
 }
