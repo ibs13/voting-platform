@@ -36,6 +36,18 @@ public static class DbSeeder
             new Voter { ElectionId = election.Id, Email = "test7@example.com", IsEligible = true }
         );
 
+        if (!await db.AdminUsers.AnyAsync())
+        {
+            var admin = new AdminUser
+            {
+                Username = "admin",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@12345")
+            };
+
+            db.AdminUsers.Add(admin);
+            await db.SaveChangesAsync();
+        }
+
         await db.SaveChangesAsync();
     }
 }
