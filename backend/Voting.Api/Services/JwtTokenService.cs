@@ -34,4 +34,24 @@ public class JwtTokenService
 
         return new JwtSecurityTokenHandler().WriteToken(jwt);
     }
+
+    public string CreateAdminToken(string username)
+    {
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.Name, username),
+            new(ClaimTypes.Role, "admin")
+        };
+
+        var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_key));
+        var creds = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);
+
+        var jwt = new JwtSecurityToken(
+            claims: claims,
+            expires: DateTime.UtcNow.AddHours(6),
+            signingCredentials: creds
+        );
+
+        return new JwtSecurityTokenHandler().WriteToken(jwt);
+    }
 }
