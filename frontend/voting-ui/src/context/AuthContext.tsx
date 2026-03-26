@@ -1,14 +1,16 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useState } from "react";
-import { setAuthToken } from "../api/axios";
+import { createContext, useContext, useEffect, useState } from "react";
+import { setAuthToken, setAuthRole, api } from "../api/axios";
 
 type AuthState = {
   electionId: string | null;
   email: string | null;
   token: string | null;
+  role: string | null;
   setElectionId: (id: string) => void;
   setEmail: (email: string) => void;
   setToken: (token: string) => void;
+  setRole: (role: string) => void;
   logout: () => void;
 };
 
@@ -31,6 +33,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return stored;
   });
 
+  const [role, setRoleState] = useState<string | null>(() => {
+    const stored = localStorage.getItem("role");
+    if (stored) {
+      setAuthRole(stored); // 🔥 set axios header immediately
+    }
+    return stored;
+  });
+
+  useEffect(() => {
+    const boot = async () => {
+      const savedToken = localStorage.getItem("token");
+      if (!savedToken) return;
+
+      setTokenState(savedToken);
+      setAuthToken(savedToken);
+
+      try {
+        const res = await api.get("/auth/me");
+        const r = res.data.role as "admin" | "voter";
+
+        setRoleState(r);
+        localStorage.setItem("role", r);
+
+        if (r === "voter") {
+          if (res.data.electionId) {
+            setElectionIdState(res.data.electionId);
+            localStorage.setItem("electionId", res.data.electionId);
+          }
+          if (res.data.email) {
+            setEmailState(res.data.email);
+            localStorage.setItem("email", res.data.email);
+          }
+        }
+      } catch {
+        // token invalid/expired
+      }
+    };
+
+    boot();
+  }, []);
+
   const setElectionId = (id: string) => {
     setElectionIdState(id);
     localStorage.setItem("electionId", id);
@@ -47,16 +90,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAuthToken(value);
   };
 
+  const setRole = (value: string) => {
+    setRoleState(value);
+    localStorage.setItem("role", value);
+    setAuthRole(value);
+  };
+
   const logout = () => {
     setTokenState(null);
+    setRoleState(null);
     setElectionId("");
     setEmail("");
 
     localStorage.removeItem("token");
     localStorage.removeItem("electionId");
     localStorage.removeItem("email");
+    localStorage.removeItem("role");
 
     setAuthToken(null);
+    setAuthRole(null);
   };
 
   return (
@@ -65,9 +117,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         electionId,
         email,
         token,
+        role,
         setElectionId,
         setEmail,
         setToken,
+        setRole,
         logout,
       }}
     >
