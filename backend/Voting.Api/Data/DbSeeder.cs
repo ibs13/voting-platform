@@ -13,8 +13,8 @@ public static class DbSeeder
         {
             Name = "Debating Society Alumni Election",
             Status = "Open",
-            StartAt = DateTimeOffset.UtcNow.AddDays(-1),
-            EndAt = DateTimeOffset.UtcNow.AddDays(7)
+            StartAt = DateTime.UtcNow.AddDays(-1),
+            EndAt = DateTime.UtcNow.AddDays(7)
         };
 
         db.Elections.Add(election);
