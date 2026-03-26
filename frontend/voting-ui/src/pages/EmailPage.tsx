@@ -29,8 +29,10 @@ export const EmailPage = () => {
       setAuthEmail(email);
 
       navigate("/otp");
-    } catch (err: any) {
-      setError(err.response?.data || "Something went wrong");
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Something went wrong";
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
