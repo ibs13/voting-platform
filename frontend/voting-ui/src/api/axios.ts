@@ -11,11 +11,3 @@ export function setAuthToken(token: string | null) {
     delete api.defaults.headers.common["Authorization"];
   }
 }
-
-export function setAuthRole(role: string | null) {
-  if (role) {
-    api.defaults.headers.common["Authorization"] = `Bearer ${role}`;
-  } else {
-    delete api.defaults.headers.common["Authorization"];
-  }
-}

@@ -1,16 +1,24 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useEffect, useState } from "react";
-import { setAuthToken, setAuthRole, api } from "../api/axios";
+import {
+  createContext,
+  useContext,
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
+import { setAuthToken, api } from "../api/axios";
+
+type Role = "admin" | "voter" | null;
 
 type AuthState = {
   electionId: string | null;
   email: string | null;
   token: string | null;
-  role: string | null;
-  setElectionId: (id: string) => void;
-  setEmail: (email: string) => void;
-  setToken: (token: string) => void;
-  setRole: (role: string) => void;
+  role: Role;
+  setElectionId: (id: string | null) => void;
+  setEmail: (email: string | null) => void;
+  setToken: (token: string | null) => void;
+  setRole: (role: Role) => void;
   logout: () => void;
 };
 
@@ -33,13 +41,62 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return stored;
   });
 
-  const [role, setRoleState] = useState<string | null>(() => {
+  const [role, setRoleState] = useState<Role>(() => {
     const stored = localStorage.getItem("role");
-    if (stored) {
-      setAuthRole(stored); // 🔥 set axios header immediately
-    }
-    return stored;
+    return stored === "admin" || stored === "voter" ? stored : null;
   });
+
+  const setElectionId = (id: string | null) => {
+    setElectionIdState(id);
+    if (id) {
+      localStorage.setItem("electionId", id);
+    } else {
+      localStorage.removeItem("electionId");
+    }
+  };
+
+  const setEmail = (value: string | null) => {
+    setEmailState(value);
+    if (value) {
+      localStorage.setItem("email", value);
+    } else {
+      localStorage.removeItem("email");
+    }
+  };
+
+  const setToken = (value: string | null) => {
+    setTokenState(value);
+    if (value) {
+      localStorage.setItem("token", value);
+      setAuthToken(value);
+    } else {
+      localStorage.removeItem("token");
+      setAuthToken(null);
+    }
+  };
+
+  const setRole = (value: Role) => {
+    setRoleState(value);
+    if (value) {
+      localStorage.setItem("role", value);
+    } else {
+      localStorage.removeItem("role");
+    }
+  };
+
+  const logout = useCallback(() => {
+    setTokenState(null);
+    setRoleState(null);
+    setElectionId(null);
+    setEmail(null);
+
+    localStorage.removeItem("token");
+    localStorage.removeItem("electionId");
+    localStorage.removeItem("email");
+    localStorage.removeItem("role");
+
+    setAuthToken(null);
+  }, []);
 
   useEffect(() => {
     const boot = async () => {
@@ -65,51 +122,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setEmailState(res.data.email);
             localStorage.setItem("email", res.data.email);
           }
+        } else {
+          setElectionIdState(null);
+          setEmailState(null);
+          localStorage.removeItem("electionId");
+          localStorage.removeItem("email");
         }
       } catch {
         // token invalid/expired
+        logout();
       }
     };
 
     boot();
-  }, []);
-
-  const setElectionId = (id: string) => {
-    setElectionIdState(id);
-    localStorage.setItem("electionId", id);
-  };
-
-  const setEmail = (value: string) => {
-    setEmailState(value);
-    localStorage.setItem("email", value);
-  };
-
-  const setToken = (value: string) => {
-    setTokenState(value);
-    localStorage.setItem("token", value);
-    setAuthToken(value);
-  };
-
-  const setRole = (value: string) => {
-    setRoleState(value);
-    localStorage.setItem("role", value);
-    setAuthRole(value);
-  };
-
-  const logout = () => {
-    setTokenState(null);
-    setRoleState(null);
-    setElectionId("");
-    setEmail("");
-
-    localStorage.removeItem("token");
-    localStorage.removeItem("electionId");
-    localStorage.removeItem("email");
-    localStorage.removeItem("role");
-
-    setAuthToken(null);
-    setAuthRole(null);
-  };
+  }, [logout]);
 
   return (
     <AuthContext.Provider
