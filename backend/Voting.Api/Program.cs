@@ -26,6 +26,9 @@ builder.Services.AddDbContext<AppDbContext>(opt =>
 //Dev OTP sender (prints OTP to console)
 builder.Services.AddSingleton<IDevOtpSender, ConsoleDevOtpSender>();
 
+// CSV Import
+builder.Services.AddScoped<CsvImportService>();
+
 // JWT Auth
 var jwtKey = builder.Configuration["jwt:key"];
 if(string.IsNullOrWhiteSpace(jwtKey))
