@@ -70,6 +70,9 @@ export default function AdminDashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [loadingElections, setLoadingElections] = useState(true);
 
+  const [voterFile, setVoterFile] = useState<File | null>(null);
+  const [candidateFile, setCandidateFile] = useState<File | null>(null);
+
   const clearFeedback = () => {
     setMessage(null);
     setError(null);
@@ -227,6 +230,80 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const handleUploadVotersCsv = async (e: React.FormEvent) => {
+    e.preventDefault();
+    clearFeedback();
+
+    if (!selectedElectionId) {
+      setError("Please select an election first.");
+      return;
+    }
+
+    if (!voterFile) {
+      setError("Please choose a voter CSV file.");
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append("file", voterFile);
+
+      const res = await api.post(
+        `/admin/elections/${selectedElectionId}/voters/upload`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        },
+      );
+
+      setMessage(
+        `${res.data.message} Imported: ${res.data.imported}, Skipped: ${res.data.skipped}`,
+      );
+      setVoterFile(null);
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, "Failed to upload voter CSV"));
+    }
+  };
+
+  const handleUploadCandidatesCsv = async (e: React.FormEvent) => {
+    e.preventDefault();
+    clearFeedback();
+
+    if (!selectedElectionId) {
+      setError("Please select an election first.");
+      return;
+    }
+
+    if (!candidateFile) {
+      setError("Please choose a candidate CSV file.");
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append("file", candidateFile);
+
+      const res = await api.post(
+        `/admin/elections/${selectedElectionId}/candidates/upload`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        },
+      );
+
+      setMessage(
+        `${res.data.message} Imported: ${res.data.imported}, Skipped: ${res.data.skipped}`,
+      );
+      setCandidateFile(null);
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, "Failed to upload candidate CSV"));
+    }
+  };
+
   return (
     <div className="w-full max-w-5xl bg-white rounded-lg shadow-md p-8 space-y-8">
       <h2 className="text-2xl font-bold">Admin Dashboard</h2>
@@ -329,6 +406,23 @@ export default function AdminDashboardPage() {
       </section>
 
       <section className="border rounded p-4 space-y-4">
+        <h3 className="text-lg font-semibold">Upload Candidates CSV</h3>
+
+        <form onSubmit={handleUploadCandidatesCsv} className="grid gap-3">
+          <input
+            type="file"
+            accept=".csv"
+            onChange={(e) => setCandidateFile(e.target.files?.[0] || null)}
+            className="border p-3 rounded"
+          />
+
+          <button className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 w-fit">
+            Upload Candidates CSV
+          </button>
+        </form>
+      </section>
+
+      <section className="border rounded p-4 space-y-4">
         <h3 className="text-lg font-semibold">Add Voter</h3>
 
         <form onSubmit={handleAddVoter} className="grid gap-3">
@@ -346,6 +440,23 @@ export default function AdminDashboardPage() {
             className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 w-fit"
           >
             Add Voter
+          </button>
+        </form>
+      </section>
+
+      <section className="border rounded p-4 space-y-4">
+        <h3 className="text-lg font-semibold">Upload Voters CSV</h3>
+
+        <form onSubmit={handleUploadVotersCsv} className="grid gap-3">
+          <input
+            type="file"
+            accept=".csv"
+            onChange={(e) => setVoterFile(e.target.files?.[0] || null)}
+            className="border p-3 rounded"
+          />
+
+          <button className="bg-pink-600 text-white px-4 py-2 rounded hover:bg-pink-700 w-fit">
+            Upload Voters CSV
           </button>
         </form>
       </section>
