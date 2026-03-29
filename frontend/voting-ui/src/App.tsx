@@ -25,7 +25,6 @@ const App = () => {
       >
         <Route path="/ballot" element={<BallotPage />} />
         <Route path="/success" element={<SuccessPage />} />
-        <Route path="/results" element={<ResultsPage />} />
       </Route>
 
       <Route
@@ -36,6 +35,16 @@ const App = () => {
         }
       >
         <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+      </Route>
+
+      <Route
+        element={
+          <RoleRoute allow={["admin", "voter"]}>
+            <ProtectedLayout />
+          </RoleRoute>
+        }
+      >
+        <Route path="/results/:electionId" element={<ResultsPage />} />
       </Route>
     </Routes>
   );

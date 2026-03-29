@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Voting.Api.Data;
-using Voting.Api.Domain;
 using Voting.Api.Domain.Enums;
 using Voting.Api.Dtos;
 
@@ -10,7 +9,6 @@ namespace Voting.Api.Controllers;
 
 [ApiController]
 [Route("results")]
-
 public class ResultsController : ControllerBase
 {
     private readonly AppDbContext _db;
@@ -20,10 +18,8 @@ public class ResultsController : ControllerBase
         _db = db;
     }
 
-    // For now: any authenticated user can view
     [Authorize]
     [HttpGet("{electionId:guid}")]
-
     public async Task<IActionResult> GetResults(Guid electionId)
     {
         var election = await _db.Elections
@@ -33,20 +29,25 @@ public class ResultsController : ControllerBase
         if (election is null)
             return NotFound("Election not found.");
 
-        if (election.Status != "Closed"){
-            return StatusCode(403, "Results are not available until the election is closed.");
-        }
+        if (election.Status != "Closed")
+            return StatusCode(
+                StatusCodes.Status403Forbidden,
+                "Results are not available until the election is closed."
+            );
 
-        // Turnout
         var totalEligible = await _db.Voters
             .CountAsync(v => v.ElectionId == electionId && v.IsEligible);
-        
+
         var totalVoted = await _db.VoteLocks
             .CountAsync(vl => vl.ElectionId == electionId);
 
-        var Offices = new List<OfficeResultDto>();
+        var candidates = await _db.Candidates
+            .Where(c => c.ElectionId == electionId)
+            .ToDictionaryAsync(c => c.Id, c => c.FullName);
 
-        foreach(var office in Enum.GetValues<Office>())
+        var offices = new List<OfficeResultDto>();
+
+        foreach (var office in Enum.GetValues<Office>())
         {
             var voteGroups = await _db.Votes
                 .Where(v => v.ElectionId == electionId && v.Office == office)
@@ -58,10 +59,6 @@ public class ResultsController : ControllerBase
                 })
                 .ToListAsync();
 
-            var candidates = await _db.Candidates
-                .Where(c => c.ElectionId == electionId)
-                .ToDictionaryAsync(c => c.Id, c => c.FullName);
-            
             var results = voteGroups
                 .Select(g => new CandidateResultDto(
                     g.CandidateId,
@@ -82,7 +79,7 @@ public class ResultsController : ControllerBase
 
             var isTie = winners.Count > 1;
 
-            Offices.Add(new OfficeResultDto(
+            offices.Add(new OfficeResultDto(
                 office.ToString(),
                 results,
                 winners,
@@ -95,7 +92,7 @@ public class ResultsController : ControllerBase
             election.Name,
             totalEligible,
             totalVoted,
-            Offices
+            offices
         ));
     }
 }

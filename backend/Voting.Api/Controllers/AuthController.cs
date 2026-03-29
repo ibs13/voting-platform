@@ -55,7 +55,7 @@ public class AuthController : ControllerBase
             return BadRequest("Please wait before requesting another OTP.");
         }
 
-        // Rate limit: max N requests in last M minutes
+        // Rate limit: max N requests in last 10 minutes
         var windowStart = now.Subtract(OtpRequestWindow);
 
         var recentRequestCount = await _db.OtpChallenges.CountAsync(c =>

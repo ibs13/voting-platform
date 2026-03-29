@@ -2,7 +2,6 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useEffect, useState } from "react";
 import { api } from "../api/axios";
-import { LogoutButton } from "../components/LogoutButton";
 
 type Candidate = {
   id: string;

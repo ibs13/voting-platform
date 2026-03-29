@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { AxiosError } from "axios";
 import { api } from "../api/axios";
+import { useNavigate } from "react-router-dom";
 
 type Election = {
   id: string;
@@ -15,6 +16,18 @@ type TurnoutResponse = {
   voted: number;
 };
 
+type Candidate = {
+  id: string;
+  fullName: string;
+  batch: string | null;
+};
+
+type Voter = {
+  id: string;
+  email: string;
+  isEligible: boolean;
+};
+
 function getApiErrorMessage(err: unknown, fallback: string): string {
   if (!(err instanceof AxiosError)) return fallback;
 
@@ -25,6 +38,7 @@ function getApiErrorMessage(err: unknown, fallback: string): string {
   if (data && typeof data === "object") {
     const maybeErrors = (data as { errors?: unknown }).errors;
     const maybeTitle = (data as { title?: unknown }).title;
+    const maybeMessage = (data as { message?: unknown }).message;
 
     if (maybeErrors && typeof maybeErrors === "object") {
       const messages = Object.values(
@@ -44,6 +58,10 @@ function getApiErrorMessage(err: unknown, fallback: string): string {
       }
     }
 
+    if (typeof maybeMessage === "string" && maybeMessage.trim()) {
+      return maybeMessage;
+    }
+
     if (typeof maybeTitle === "string" && maybeTitle.trim()) {
       return maybeTitle;
     }
@@ -53,6 +71,8 @@ function getApiErrorMessage(err: unknown, fallback: string): string {
 }
 
 export default function AdminDashboardPage() {
+  const navigate = useNavigate();
+
   const [elections, setElections] = useState<Election[]>([]);
   const [selectedElectionId, setSelectedElectionId] = useState("");
 
@@ -72,6 +92,11 @@ export default function AdminDashboardPage() {
 
   const [voterFile, setVoterFile] = useState<File | null>(null);
   const [candidateFile, setCandidateFile] = useState<File | null>(null);
+
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [voters, setVoters] = useState<Voter[]>([]);
+  const [loadingCandidates, setLoadingCandidates] = useState(false);
+  const [loadingVoters, setLoadingVoters] = useState(false);
 
   const clearFeedback = () => {
     setMessage(null);
@@ -99,9 +124,60 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const loadCandidates = async (electionId: string) => {
+    if (!electionId) {
+      setCandidates([]);
+      return;
+    }
+
+    try {
+      setLoadingCandidates(true);
+      const res = await api.get(`/admin/elections/${electionId}/candidates`);
+      setCandidates(res.data as Candidate[]);
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, "Failed to load candidates"));
+      setCandidates([]);
+    } finally {
+      setLoadingCandidates(false);
+    }
+  };
+
+  const loadVoters = async (electionId: string) => {
+    if (!electionId) {
+      setVoters([]);
+      return;
+    }
+
+    try {
+      setLoadingVoters(true);
+      const res = await api.get(`/admin/elections/${electionId}/voters`);
+      setVoters(res.data as Voter[]);
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, "Failed to load voters"));
+      setVoters([]);
+    } finally {
+      setLoadingVoters(false);
+    }
+  };
+
+  const loadLists = useCallback(async (electionId: string) => {
+    await Promise.all([loadCandidates(electionId), loadVoters(electionId)]);
+  }, []);
+
   useEffect(() => {
     loadElections();
   }, []);
+
+  useEffect(() => {
+    if (!selectedElectionId) {
+      setCandidates([]);
+      setVoters([]);
+      setTurnout(null);
+      return;
+    }
+
+    loadLists(selectedElectionId);
+  }, [selectedElectionId, loadLists]);
 
   const handleCreateElection = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,6 +200,7 @@ export default function AdminDashboardPage() {
 
       if (res.data?.id) {
         setSelectedElectionId(res.data.id);
+        await loadLists(res.data.id);
       }
     } catch (err: unknown) {
       setError(getApiErrorMessage(err, "Failed to create election"));
@@ -148,6 +225,7 @@ export default function AdminDashboardPage() {
       setMessage("Candidate added successfully.");
       setCandidateName("");
       setCandidateBatch("");
+      await loadCandidates(selectedElectionId);
     } catch (err: unknown) {
       setError(getApiErrorMessage(err, "Failed to add candidate"));
     }
@@ -169,6 +247,7 @@ export default function AdminDashboardPage() {
 
       setMessage("Voter added successfully.");
       setVoterEmail("");
+      await loadVoters(selectedElectionId);
     } catch (err: unknown) {
       setError(getApiErrorMessage(err, "Failed to add voter"));
     }
@@ -262,6 +341,7 @@ export default function AdminDashboardPage() {
         `${res.data.message} Imported: ${res.data.imported}, Skipped: ${res.data.skipped}`,
       );
       setVoterFile(null);
+      await loadVoters(selectedElectionId);
     } catch (err: unknown) {
       setError(getApiErrorMessage(err, "Failed to upload voter CSV"));
     }
@@ -299,9 +379,59 @@ export default function AdminDashboardPage() {
         `${res.data.message} Imported: ${res.data.imported}, Skipped: ${res.data.skipped}`,
       );
       setCandidateFile(null);
+      await loadCandidates(selectedElectionId);
     } catch (err: unknown) {
       setError(getApiErrorMessage(err, "Failed to upload candidate CSV"));
     }
+  };
+
+  const handleDeleteCandidate = async (candidateId: string) => {
+    clearFeedback();
+
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this candidate?",
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const res = await api.delete(
+        `/admin/elections/candidates/${candidateId}`,
+      );
+      setMessage(res.data?.message ?? "Candidate deleted successfully.");
+      await loadCandidates(selectedElectionId);
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, "Failed to delete candidate"));
+    }
+  };
+
+  const handleDeleteVoter = async (voterId: string) => {
+    clearFeedback();
+
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this voter?",
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const res = await api.delete(`/admin/elections/voters/${voterId}`);
+      setMessage(res.data?.message ?? "Voter deleted successfully.");
+      await loadVoters(selectedElectionId);
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, "Failed to delete voter"));
+    }
+  };
+
+  const handleViewResults = () => {
+    clearFeedback();
+
+    if (!selectedElectionId) {
+      setError("Please select an election first.");
+      return;
+    }
+
+    navigate(`/results/${selectedElectionId}`);
   };
 
   return (
@@ -416,10 +546,52 @@ export default function AdminDashboardPage() {
             className="border p-3 rounded"
           />
 
-          <button className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 w-fit">
+          <button
+            type="submit"
+            className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 w-fit"
+          >
             Upload Candidates CSV
           </button>
         </form>
+      </section>
+
+      <section className="border rounded p-4 space-y-4">
+        <h3 className="text-lg font-semibold">Candidate List</h3>
+
+        {loadingCandidates ? (
+          <div className="text-gray-600">Loading candidates...</div>
+        ) : candidates.length === 0 ? (
+          <div className="text-gray-600">No candidates found.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full border border-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="border p-3 text-left">Full Name</th>
+                  <th className="border p-3 text-left">Batch</th>
+                  <th className="border p-3 text-left">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {candidates.map((candidate) => (
+                  <tr key={candidate.id}>
+                    <td className="border p-3">{candidate.fullName}</td>
+                    <td className="border p-3">{candidate.batch || "-"}</td>
+                    <td className="border p-3">
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteCandidate(candidate.id)}
+                        className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
 
       <section className="border rounded p-4 space-y-4">
@@ -455,10 +627,54 @@ export default function AdminDashboardPage() {
             className="border p-3 rounded"
           />
 
-          <button className="bg-pink-600 text-white px-4 py-2 rounded hover:bg-pink-700 w-fit">
+          <button
+            type="submit"
+            className="bg-pink-600 text-white px-4 py-2 rounded hover:bg-pink-700 w-fit"
+          >
             Upload Voters CSV
           </button>
         </form>
+      </section>
+
+      <section className="border rounded p-4 space-y-4">
+        <h3 className="text-lg font-semibold">Voter List</h3>
+
+        {loadingVoters ? (
+          <div className="text-gray-600">Loading voters...</div>
+        ) : voters.length === 0 ? (
+          <div className="text-gray-600">No voters found.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full border border-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="border p-3 text-left">Email</th>
+                  <th className="border p-3 text-left">Eligible</th>
+                  <th className="border p-3 text-left">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {voters.map((voter) => (
+                  <tr key={voter.id}>
+                    <td className="border p-3">{voter.email}</td>
+                    <td className="border p-3">
+                      {voter.isEligible ? "Yes" : "No"}
+                    </td>
+                    <td className="border p-3">
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteVoter(voter.id)}
+                        className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
 
       <section className="border rounded p-4 space-y-4">
@@ -487,6 +703,14 @@ export default function AdminDashboardPage() {
             className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
           >
             Close Election
+          </button>
+
+          <button
+            type="button"
+            onClick={handleViewResults}
+            className="bg-slate-700 text-white px-4 py-2 rounded hover:bg-slate-800"
+          >
+            View Results
           </button>
         </div>
 

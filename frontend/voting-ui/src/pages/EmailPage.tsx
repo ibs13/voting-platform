@@ -12,7 +12,7 @@ export const EmailPage = () => {
   const { setElectionId, setEmail: setAuthEmail } = useAuth();
 
   // ⚠️ For now hardcode electionId (from backend dev endpoint)
-  const electionId = "13167300-EC43-440F-B1F0-164AB376CAFA";
+  const electionId = "5AFAD051-DA18-4B38-8928-CB3ADD6DCCAC";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,6 +66,9 @@ export const EmailPage = () => {
         >
           {loading ? "Sending..." : "Send OTP"}
         </button>
+        <p className="pt-2 text-xs text-gray-500">
+          You may request a new OTP after 30 seconds.
+        </p>
       </form>
     </div>
   );

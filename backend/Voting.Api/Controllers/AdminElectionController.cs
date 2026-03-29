@@ -22,7 +22,6 @@ public class AdminElectionsController : ControllerBase
         _csv = csv;
     }
 
-
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] AdminCreateElectionDto dto)
     {
@@ -115,10 +114,32 @@ public class AdminElectionsController : ControllerBase
                 c.Id,
                 c.FullName,
                 c.Batch
+                // c.CreatedAtUtc
             })
             .ToListAsync();
 
         return Ok(candidates);
+    }
+
+    [HttpDelete("candidates/{candidateId:guid}")]
+    public async Task<IActionResult> DeleteCandidate(Guid candidateId)
+    {
+        var candidate = await _db.Candidates
+            .FirstOrDefaultAsync(c => c.Id == candidateId);
+
+        if (candidate is null)
+            return NotFound("Candidate not found.");
+
+        var hasVotes = await _db.Votes.AnyAsync(v =>
+            v.CandidateId == candidateId);
+
+        if (hasVotes)
+            return BadRequest("Cannot delete candidate because votes already exist for this candidate.");
+
+        _db.Candidates.Remove(candidate);
+        await _db.SaveChangesAsync();
+
+        return Ok(new { message = "Candidate deleted successfully." });
     }
 
     [HttpPost("{electionId:guid}/voters")]
@@ -172,10 +193,31 @@ public class AdminElectionsController : ControllerBase
                 v.Id,
                 v.Email,
                 v.IsEligible
+                // v.CreatedAtUtc
             })
             .ToListAsync();
 
         return Ok(voters);
+    }
+
+    [HttpDelete("voters/{voterId:guid}")]
+    public async Task<IActionResult> DeleteVoter(Guid voterId)
+    {
+        var voter = await _db.Voters
+            .FirstOrDefaultAsync(v => v.Id == voterId);
+
+        if (voter is null)
+            return NotFound("Voter not found.");
+
+        var hasVoteLock = await _db.VoteLocks.AnyAsync(vl => vl.VoterId == voterId);
+
+        if (hasVoteLock)
+            return BadRequest("Cannot delete voter because this voter has already voted.");
+
+        _db.Voters.Remove(voter);
+        await _db.SaveChangesAsync();
+
+        return Ok(new { message = "Voter deleted successfully." });
     }
 
     [HttpPost("{electionId:guid}/open")]

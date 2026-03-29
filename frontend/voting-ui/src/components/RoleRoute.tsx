@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 type Role = "admin" | "voter";
 
 type Props = {
-  allow: Role;
+  allow: Role | Role[];
   children: React.ReactNode;
 };
 
@@ -19,7 +19,9 @@ export default function RoleRoute({ allow, children }: Props) {
     return <div className="p-10">Loading...</div>;
   }
 
-  if (role !== allow) {
+  const allowedRoles = Array.isArray(allow) ? allow : [allow];
+
+  if (!allowedRoles.includes(role)) {
     return <Navigate to="/" replace />;
   }
 
