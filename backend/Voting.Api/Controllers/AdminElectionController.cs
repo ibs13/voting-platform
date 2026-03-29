@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Voting.Api.Data;
 using Voting.Api.Domain;
 using Voting.Api.Dtos;
+using Voting.Api.Services;
 
 namespace Voting.Api.Controllers;
 
@@ -13,11 +14,14 @@ namespace Voting.Api.Controllers;
 public class AdminElectionsController : ControllerBase
 {
     private readonly AppDbContext _db;
+    private readonly CsvImportService _csv;
 
-    public AdminElectionsController(AppDbContext db)
+    public AdminElectionsController(AppDbContext db, CsvImportService csv)
     {
         _db = db;
+        _csv = csv;
     }
+
 
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] AdminCreateElectionDto dto)
@@ -203,5 +207,128 @@ public class AdminElectionsController : ControllerBase
         var voted = await _db.VoteLocks.CountAsync(vl => vl.ElectionId == electionId);
 
         return Ok(new { eligible, voted });
+    }
+
+    [HttpPost("{electionId:guid}/voters/upload")]
+    public async Task<IActionResult> UploadVoters(Guid electionId, IFormFile file)
+    {
+        var electionExists = await _db.Elections.AnyAsync(e => e.Id == electionId);
+        if (!electionExists) return NotFound("Election not found.");
+
+        if (file is null || file.Length == 0)
+            return BadRequest("CSV file is required.");
+
+        var rows = _csv.ParseLines(file);
+
+        if (rows.Count == 0)
+            return BadRequest("CSV file is empty.");
+
+        var header = rows[0];
+        if (header.Length < 1 || !string.Equals(header[0], "email", StringComparison.OrdinalIgnoreCase))
+            return BadRequest("Voters CSV header must be: email");
+
+        var imported = 0;
+        var skipped = 0;
+
+        foreach (var row in rows.Skip(1))
+        {
+            if (row.Length < 1 || string.IsNullOrWhiteSpace(row[0]))
+            {
+                skipped++;
+                continue;
+            }
+
+            var email = row[0].Trim().ToLowerInvariant();
+
+            var exists = await _db.Voters.AnyAsync(v =>
+                v.ElectionId == electionId && v.Email == email);
+
+            if (exists)
+            {
+                skipped++;
+                continue;
+            }
+
+            _db.Voters.Add(new Voter
+            {
+                ElectionId = electionId,
+                Email = email,
+                IsEligible = true
+            });
+
+            imported++;
+        }
+
+        await _db.SaveChangesAsync();
+
+        return Ok(new
+        {
+            message = "Voter CSV processed successfully.",
+            imported,
+            skipped
+        });
+    }
+
+    [HttpPost("{electionId:guid}/candidates/upload")]
+    public async Task<IActionResult> UploadCandidates(Guid electionId, IFormFile file)
+    {
+        var electionExists = await _db.Elections.AnyAsync(e => e.Id == electionId);
+        if (!electionExists) return NotFound("Election not found.");
+
+        if (file is null || file.Length == 0)
+            return BadRequest("CSV file is required.");
+
+        var rows = _csv.ParseLines(file);
+
+        if (rows.Count == 0)
+            return BadRequest("CSV file is empty.");
+
+        var header = rows[0];
+        if (header.Length < 1 || !string.Equals(header[0], "fullName", StringComparison.OrdinalIgnoreCase))
+            return BadRequest("Candidates CSV header must start with: fullName,batch");
+
+        var imported = 0;
+        var skipped = 0;
+
+        foreach (var row in rows.Skip(1))
+        {
+            if (row.Length < 1 || string.IsNullOrWhiteSpace(row[0]))
+            {
+                skipped++;
+                continue;
+            }
+
+            var fullName = row[0].Trim();
+            var batch = row.Length > 1 && !string.IsNullOrWhiteSpace(row[1])
+                ? row[1].Trim()
+                : null;
+
+            var exists = await _db.Candidates.AnyAsync(c =>
+                c.ElectionId == electionId && c.FullName == fullName);
+
+            if (exists)
+            {
+                skipped++;
+                continue;
+            }
+
+            _db.Candidates.Add(new Candidate
+            {
+                ElectionId = electionId,
+                FullName = fullName,
+                Batch = batch
+            });
+
+            imported++;
+        }
+
+        await _db.SaveChangesAsync();
+
+        return Ok(new
+        {
+            message = "Candidate CSV processed successfully.",
+            imported,
+            skipped
+        });
     }
 }
