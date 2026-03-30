@@ -11,8 +11,9 @@ type Candidate = {
 
 export const BallotPage = () => {
   const navigate = useNavigate();
-  const { electionId, token } = useAuth();
+  const { electionId, token, isAuthReady } = useAuth();
 
+  const [submitting, setSubmitting] = useState(false);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +23,13 @@ export const BallotPage = () => {
   const [treasurer, setTreasurer] = useState("");
 
   useEffect(() => {
-    if (!electionId || !token) return;
+    if (!isAuthReady) return;
+
+    if (!electionId || !token) {
+      setLoading(false);
+      setError("Session expired or not ready. Please log in again.");
+      return;
+    }
 
     const fetchBallot = async () => {
       try {
@@ -36,31 +43,51 @@ export const BallotPage = () => {
 
         const res = await api.get(`/elections/${electionId}/ballot`);
         setCandidates(res.data.candidates);
-      } catch (err: any) {
-        setError(err.response?.data || "Failed to load ballot");
-        console.log(error);
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to load ballot";
+        setError(errorMessage);
+        console.log(errorMessage);
       } finally {
         setLoading(false);
       }
     };
 
     fetchBallot();
-  }, [electionId, token]);
+  }, [isAuthReady, electionId, token, navigate]);
 
+  if (!isAuthReady) {
+    return <div className="p-10">Preparing session...</div>;
+  }
   if (loading) return <div className="p-10">Loading ballot...</div>;
   if (error) return <div className="p-10 text-red-500">{error}</div>;
 
-  const selectIds = [president, secretary, treasurer];
-
-  const isDisabled = (id: string) => selectIds.includes(id);
+  if (!electionId || !token) {
+    return (
+      <div className="p-10">
+        Session not ready. Please wait or log in again.
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!president || !secretary || !treasurer) {
-      alert("Please selcet 3 different candidates.");
+      alert("Please select all 3 positions.");
       return;
     }
+
+    if (
+      president === secretary ||
+      president === treasurer ||
+      secretary === treasurer
+    ) {
+      alert("Please select 3 different candidates.");
+      return;
+    }
+
+    setSubmitting(true);
 
     try {
       await api.post("/votes/submit", {
@@ -71,8 +98,11 @@ export const BallotPage = () => {
       });
 
       navigate("/success");
-    } catch (err: any) {
-      alert(err.response?.data || "Vote failed");
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Vote failed";
+      alert(errorMessage);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -153,6 +183,7 @@ export const BallotPage = () => {
 
           <button
             type="submit"
+            disabled={submitting}
             className="w-full bg-green-600 text-white py-3 rounded hover:bg-green-700"
           >
             Submit Vote

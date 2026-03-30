@@ -9,19 +9,19 @@ type Props = {
 };
 
 export default function RoleRoute({ allow, children }: Props) {
-  const { token, role } = useAuth();
+  const { token, role, isAuthReady } = useAuth();
+
+  if (!isAuthReady) {
+    return <div className="p-10">Preparing session...</div>;
+  }
 
   if (!token) {
     return <Navigate to="/" replace />;
   }
 
-  if (!role) {
-    return <div className="p-10">Loading...</div>;
-  }
-
   const allowedRoles = Array.isArray(allow) ? allow : [allow];
 
-  if (!allowedRoles.includes(role)) {
+  if (!role || !allowedRoles.includes(role)) {
     return <Navigate to="/" replace />;
   }
 

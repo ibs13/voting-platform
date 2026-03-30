@@ -9,7 +9,7 @@ export const OtpPage = () => {
   const [error, setError] = useState<string | null>(null);
 
   const navigate = useNavigate();
-  const { electionId, email, setToken } = useAuth();
+  const { electionId, email, setToken, setRole } = useAuth();
 
   if (!electionId || !email) {
     return <div className="p-10">Invalid session. Go back.</div>;
@@ -27,17 +27,16 @@ export const OtpPage = () => {
         otp,
       });
 
-      const token = response.data.token;
-      setToken(token);
-
       if (response) {
-        localStorage.setItem("token", token);
-        localStorage.setItem("electionId", electionId);
-        localStorage.setItem("email", email);
+        const token = response.data.token;
+        setToken(token);
+        setRole("voter");
+
         navigate("/ballot");
       }
-    } catch (err: any) {
-      setError(err.response?.data || "Invalid OTP");
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Invalid OTP";
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

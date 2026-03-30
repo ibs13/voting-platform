@@ -19,6 +19,7 @@ type AuthState = {
   setEmail: (email: string | null) => void;
   setToken: (token: string | null) => void;
   setRole: (role: Role) => void;
+  isAuthReady: boolean;
   logout: () => void;
 };
 
@@ -45,6 +46,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const stored = localStorage.getItem("role");
     return stored === "admin" || stored === "voter" ? stored : null;
   });
+
+  const [isAuthReady, setIsAuthReady] = useState(false);
 
   const setElectionId = (id: string | null) => {
     setElectionIdState(id);
@@ -87,8 +90,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(() => {
     setTokenState(null);
     setRoleState(null);
-    setElectionId(null);
-    setEmail(null);
+    setElectionIdState(null);
+    setEmailState(null);
 
     localStorage.removeItem("token");
     localStorage.removeItem("electionId");
@@ -101,7 +104,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const boot = async () => {
       const savedToken = localStorage.getItem("token");
-      if (!savedToken) return;
+
+      if (!savedToken) {
+        setIsAuthReady(true);
+        return;
+      }
 
       setTokenState(savedToken);
       setAuthToken(savedToken);
@@ -131,6 +138,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch {
         // token invalid/expired
         logout();
+      } finally {
+        setIsAuthReady(true);
       }
     };
 
@@ -148,6 +157,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setEmail,
         setToken,
         setRole,
+        isAuthReady,
         logout,
       }}
     >

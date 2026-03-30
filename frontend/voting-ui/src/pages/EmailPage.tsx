@@ -2,6 +2,51 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api/axios";
 import { useAuth } from "../context/AuthContext";
+import axios from "axios";
+
+type ApiErrorResponse = {
+  message?: string;
+  errors?: Record<string, string[]>;
+};
+
+function getErrorMessage(error: unknown): string {
+  if (axios.isAxiosError(error)) {
+    const data = error.response?.data as ApiErrorResponse | undefined;
+
+    if (data?.message) {
+      return data.message;
+    }
+
+    if (data?.errors) {
+      const firstError = Object.values(data.errors)[0]?.[0];
+      if (firstError) return firstError;
+    }
+
+    if (error.response?.status === 400) {
+      return "Election is not active or you have already requested an OTP.";
+    }
+
+    if (error.response?.status === 401) {
+      return "Unauthorized request.";
+    }
+
+    if (error.response?.status === 404) {
+      return "You are not registered for this election or the election does not exist.";
+    }
+
+    if (error.response?.status === 429) {
+      return "Too many requests. Please wait a moment and try again.";
+    }
+
+    if (error.response?.status === 500) {
+      return "Server error. Please try again later.";
+    }
+
+    return "Something went wrong. Please try again.";
+  }
+
+  return "Unexpected error occurred.";
+}
 
 export const EmailPage = () => {
   const [email, setEmail] = useState("");
@@ -12,7 +57,7 @@ export const EmailPage = () => {
   const { setElectionId, setEmail: setAuthEmail } = useAuth();
 
   // ⚠️ For now hardcode electionId (from backend dev endpoint)
-  const electionId = "5AFAD051-DA18-4B38-8928-CB3ADD6DCCAC";
+  const electionId = "B98285AB-DE8D-4648-A8F1-63C4976EADC2";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,10 +74,8 @@ export const EmailPage = () => {
       setAuthEmail(email);
 
       navigate("/otp");
-    } catch (err: unknown) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Something went wrong";
-      setError(errorMessage);
+    } catch (error: unknown) {
+      setError(getErrorMessage(error));
     } finally {
       setLoading(false);
     }
