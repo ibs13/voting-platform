@@ -30,9 +30,9 @@ builder.Services.AddSingleton<IDevOtpSender, ConsoleDevOtpSender>();
 builder.Services.AddScoped<CsvImportService>();
 
 // JWT Auth
-var jwtKey = builder.Configuration["jwt:key"];
+var jwtKey = builder.Configuration["Jwt:Key"];
 if(string.IsNullOrWhiteSpace(jwtKey))
-    throw new InvalidOperationException("Jwt:Key is missing in appsettings.json");
+    throw new InvalidOperationException("Jwt:Key is missing");
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
