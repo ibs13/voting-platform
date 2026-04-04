@@ -1,73 +1,81 @@
-# React + TypeScript + Vite
+# Voting UI
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend application for the Voting Platform project. This React app provides separate flows for voters and admins and connects to the ASP.NET Core backend API.
 
-Currently, two official plugins are available:
+## Purpose
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+The frontend handles:
 
-## React Compiler
+- voter OTP login
+- ballot submission
+- results viewing
+- admin login
+- admin dashboard for election, candidate, and voter management
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Tech Stack
 
-## Expanding the ESLint configuration
+- React 18
+- TypeScript
+- Vite
+- Axios
+- Tailwind CSS
+- React Router
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Main Pages
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- `EmailPage` - voter enters email to request OTP
+- `OtpPage` - voter verifies OTP
+- `BallotPage` - voter submits ballot
+- `SuccessPage` - confirmation after successful vote
+- `ResultsPage` - results page for voter and admin after election close
+- `AdminLoginPage` - admin login
+- `AdminDashboardPage` - election management dashboard
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Routing and Access Control
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+The app uses protected routes and role-based access control.
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Voter routes
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- `/`
+- `/otp`
+- `/ballot`
+- `/success`
+- `/results/:electionId`
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Admin routes
+
+- `/admin/login`
+- `/admin/dashboard`
+- `/results/:electionId`
+
+## Features
+
+### Voter
+
+- Request OTP using email
+- Verify OTP and receive JWT
+- Open ballot for the election
+- Submit one vote per office
+- View results after election close
+
+### Admin
+
+- Log in to the dashboard
+- Create elections
+- Add candidates and voters
+- Upload candidates and voters via CSV
+- View and manage candidate and voter lists
+- Open and close elections
+- View turnout
+- View results after election close
+
+## Local Development
+
+From the frontend folder:
+
+```bash
+cd frontend/voting-ui
+npm install
+npm run dev
 ```
