@@ -7,6 +7,7 @@ type Candidate = {
   id: string;
   fullName: string;
   batch?: string;
+  office: string;
 };
 
 export const BallotPage = () => {
@@ -70,6 +71,10 @@ export const BallotPage = () => {
     );
   }
 
+  const presidents = candidates.filter((c) => c.office === "President");
+  const secretaries = candidates.filter((c) => c.office === "Secretary");
+  const treasurers = candidates.filter((c) => c.office === "Treasurer");
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -118,7 +123,6 @@ export const BallotPage = () => {
           </h2>
 
           {/* President */}
-
           <div className="mb-6">
             <label className="font-semibold">President</label>
             <select
@@ -127,12 +131,8 @@ export const BallotPage = () => {
               className="w-full border p-2 rounded mt-2"
             >
               <option value="">Select candidate</option>
-              {candidates.map((c) => (
-                <option
-                  key={c.id}
-                  value={c.id}
-                  disabled={c.id === secretary || c.id === treasurer}
-                >
+              {presidents.map((c) => (
+                <option key={c.id} value={c.id}>
                   {c.fullName} {c.batch ? `(${c.batch})` : ""}
                 </option>
               ))}
@@ -148,12 +148,8 @@ export const BallotPage = () => {
               className="w-full border p-2 rounded mt-2"
             >
               <option value="">Select candidate</option>
-              {candidates.map((c) => (
-                <option
-                  key={c.id}
-                  value={c.id}
-                  disabled={c.id === president || c.id === treasurer}
-                >
+              {secretaries.map((c) => (
+                <option key={c.id} value={c.id}>
                   {c.fullName} {c.batch ? `(${c.batch})` : ""}
                 </option>
               ))}
@@ -169,12 +165,8 @@ export const BallotPage = () => {
               className="w-full border p-2 rounded mt-2"
             >
               <option value="">Select candidate</option>
-              {candidates.map((c) => (
-                <option
-                  key={c.id}
-                  value={c.id}
-                  disabled={c.id === president || c.id === secretary}
-                >
+              {treasurers.map((c) => (
+                <option key={c.id} value={c.id}>
                   {c.fullName} {c.batch ? `(${c.batch})` : ""}
                 </option>
               ))}

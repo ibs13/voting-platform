@@ -51,14 +51,30 @@ public class VotesController : ControllerBase
 
         if (voter is null) return BadRequest("You are not eligible for this election.");
 
-        // Validate candidate ids belong to election
-        var candidateIds = new[] { dto.PresidentCandidateId, dto.SecretaryCandidateId, dto.TreasurerCandidateId };
+        // Validate each candidate belongs to the election AND holds the correct office
+        var presidentValid = await _db.Candidates.AnyAsync(c =>
+            c.ElectionId == dto.ElectionId &&
+            c.Id == dto.PresidentCandidateId &&
+            c.Office == Office.President);
 
-        var validCount = await _db.Candidates
-            .Where(c => c.ElectionId == dto.ElectionId && candidateIds.Contains(c.Id))
-            .CountAsync();
+        if (!presidentValid)
+            return BadRequest("Invalid candidate selection for President.");
 
-        if (validCount != 3) return BadRequest("Invalid candidate selection.");
+        var secretaryValid = await _db.Candidates.AnyAsync(c =>
+            c.ElectionId == dto.ElectionId &&
+            c.Id == dto.SecretaryCandidateId &&
+            c.Office == Office.Secretary);
+
+        if (!secretaryValid)
+            return BadRequest("Invalid candidate selection for Secretary.");
+
+        var treasurerValid = await _db.Candidates.AnyAsync(c =>
+            c.ElectionId == dto.ElectionId &&
+            c.Id == dto.TreasurerCandidateId &&
+            c.Office == Office.Treasurer);
+
+        if (!treasurerValid)
+            return BadRequest("Invalid candidate selection for Treasurer.");
 
         // Transaction: lock voter + store anonymous votes
         await using var tx = await _db.Database.BeginTransactionAsync();

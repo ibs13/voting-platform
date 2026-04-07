@@ -20,6 +20,7 @@ type Candidate = {
   id: string;
   fullName: string;
   batch: string | null;
+  office: string;
 };
 
 type Voter = {
@@ -82,6 +83,7 @@ export default function AdminDashboardPage() {
 
   const [candidateName, setCandidateName] = useState("");
   const [candidateBatch, setCandidateBatch] = useState("");
+  const [candidateOffice, setCandidateOffice] = useState("President");
 
   const [voterEmail, setVoterEmail] = useState("");
 
@@ -220,11 +222,13 @@ export default function AdminDashboardPage() {
       await api.post(`/admin/elections/${selectedElectionId}/candidates`, {
         fullName: candidateName,
         batch: candidateBatch.trim() || null,
+        office: candidateOffice,
       });
 
       setMessage("Candidate added successfully.");
       setCandidateName("");
       setCandidateBatch("");
+      setCandidateOffice("President");
       await loadCandidates(selectedElectionId);
     } catch (err: unknown) {
       setError(getApiErrorMessage(err, "Failed to add candidate"));
@@ -526,6 +530,17 @@ export default function AdminDashboardPage() {
             className="border p-3 rounded"
           />
 
+          <select
+            value={candidateOffice}
+            onChange={(e) => setCandidateOffice(e.target.value)}
+            className="border p-3 rounded"
+            required
+          >
+            <option value="President">President</option>
+            <option value="Secretary">Secretary</option>
+            <option value="Treasurer">Treasurer</option>
+          </select>
+
           <button
             type="submit"
             className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 w-fit"
@@ -569,6 +584,7 @@ export default function AdminDashboardPage() {
                 <tr>
                   <th className="border p-3 text-left">Full Name</th>
                   <th className="border p-3 text-left">Batch</th>
+                  <th className="border p-3 text-left">Office</th>
                   <th className="border p-3 text-left">Actions</th>
                 </tr>
               </thead>
@@ -577,6 +593,7 @@ export default function AdminDashboardPage() {
                   <tr key={candidate.id}>
                     <td className="border p-3">{candidate.fullName}</td>
                     <td className="border p-3">{candidate.batch || "-"}</td>
+                    <td className="border p-3">{candidate.office}</td>
                     <td className="border p-3">
                       <button
                         type="button"

@@ -1,6 +1,6 @@
 namespace Voting.Api.Dtos;
 
-public record CandidateDto(Guid Id, string FullName, string? Batch);
+public record CandidateDto(Guid Id, string FullName, string? Batch, string Office);
 
 public record BallotResponseDto(
     Guid ElectionId,
