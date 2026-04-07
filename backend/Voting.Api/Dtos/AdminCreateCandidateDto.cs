@@ -1,6 +1,8 @@
+using Voting.Api.Domain.Enums;
 namespace Voting.Api.Dtos;
 
 public record AdminCreateCandidateDto(
     string FullName,
-    string? Batch
+    string? Batch,
+    Office Office
 );
