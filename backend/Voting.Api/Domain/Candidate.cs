@@ -9,5 +9,6 @@ public class Candidate
     public string? Department { get; set; }
     public string? Roll { get; set; }
 
+    public Office Office { get; set; }
     public Election? Election { get; set; }
 }
