@@ -34,7 +34,7 @@ public class ElectionsController : ControllerBase
 
         if (election is null) return NotFound("Election not found");
 
-        var now = DateTimeOffset.UtcNow;
+        var now = DateTime.UtcNow;
         if (election.Status != "Open") return BadRequest("Election is not open.");
         if (now < election.StartAt || now > election.EndAt) return BadRequest("Election is not active.");
 

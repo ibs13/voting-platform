@@ -6,6 +6,7 @@ using Voting.Api.Domain;
 using Voting.Api.Domain.Enums;
 using Voting.Api.Dtos;
 using Voting.Api.Services;
+using Voting.Api.Helpers;
 
 namespace Voting.Api.Controllers;
 
@@ -26,17 +27,24 @@ public class AdminElectionsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] AdminCreateElectionDto dto)
     {
+
+        var startAtUtc = TimeZoneHelper.ConvertBangladeshLocalToUtc(dto.StartAt);
+        var endAtUtc = TimeZoneHelper.ConvertBangladeshLocalToUtc(dto.EndAt);
+
         if (string.IsNullOrWhiteSpace(dto.Name))
             return BadRequest("Election name is required.");
 
-        if (dto.EndAt <= dto.StartAt)
+        if (startAtUtc < DateTime.UtcNow)
+            return BadRequest("Start time must be in the future.");
+
+        if (endAtUtc < startAtUtc)
             return BadRequest("End time must be after start time.");
 
         var election = new Election
         {
             Name = dto.Name.Trim(),
-            StartAt = dto.StartAt,
-            EndAt = dto.EndAt,
+            StartAt = startAtUtc,
+            EndAt = endAtUtc,
             Status = "Draft"
         };
 
@@ -48,8 +56,8 @@ public class AdminElectionsController : ControllerBase
             election.Id,
             election.Name,
             election.Status,
-            election.StartAt,
-            election.EndAt
+            StartAtUtc = election.StartAt,
+            EndAtUtc = election.EndAt,                                                                                                                                                     
         });
     }
 

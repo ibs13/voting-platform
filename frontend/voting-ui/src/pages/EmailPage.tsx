@@ -57,7 +57,7 @@ export const EmailPage = () => {
   const { setElectionId, setEmail: setAuthEmail } = useAuth();
 
   // ⚠️ For now hardcode electionId (from backend dev endpoint)
-  const electionId = "F34E84EF-7095-4367-B229-3BA33EDA5BC7";
+  const electionId = "3683A109-204A-47A8-B590-C5F536C2917F";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

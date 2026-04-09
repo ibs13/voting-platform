@@ -32,10 +32,16 @@ public class AuthController : ControllerBase
 
         // election must exist + open + within time
 
+        
+
         var election = await _db.Elections.FirstOrDefaultAsync(election => election.Id == dto.ElectionId);
+
+        
         if (election is null || election.Id != dto.ElectionId) return NotFound("Election not found.");
-        if (election.Status != "Open") return BadRequest("Election is not open.");
         var now = DateTime.UtcNow;
+        
+        if (election.Status != "Open") return BadRequest("Election is not open.");
+        
         if(now < election.StartAt || now > election.EndAt) return BadRequest("Election is not active.");
 
         // voter must be eligible
