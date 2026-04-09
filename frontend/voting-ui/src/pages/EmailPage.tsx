@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api/axios";
 import { useAuth } from "../context/AuthContext";
@@ -7,6 +7,14 @@ import axios from "axios";
 type ApiErrorResponse = {
   message?: string;
   errors?: Record<string, string[]>;
+};
+
+type ActiveElectionResponse = {
+  id: string;
+  name: string;
+  status: string;
+  startAt: string;
+  endAt: string;
 };
 
 function getErrorMessage(error: unknown): string {
@@ -51,26 +59,50 @@ function getErrorMessage(error: unknown): string {
 export const EmailPage = () => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeElection, setActiveElection] =
+    useState<ActiveElectionResponse | null>(null);
 
   const navigate = useNavigate();
   const { setElectionId, setEmail: setAuthEmail } = useAuth();
 
-  // ⚠️ For now hardcode electionId (from backend dev endpoint)
-  const electionId = "3683A109-204A-47A8-B590-C5F536C2917F";
+  useEffect(() => {
+    const loadActiveElection = async () => {
+      try {
+        setError(null);
+
+        const response =
+          await api.get<ActiveElectionResponse>("/elections/active");
+        const election = response.data;
+
+        setActiveElection(election);
+        setElectionId(election.id);
+      } catch (error: unknown) {
+        setError(getErrorMessage(error));
+      } finally {
+        setPageLoading(false);
+      }
+    };
+
+    loadActiveElection();
+  }, [setElectionId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!activeElection) {
+      setError("No active election is available right now.");
+      return;
+    }
     setLoading(true);
     setError(null);
 
     try {
       await api.post("/auth/request-otp", {
-        electionId,
         email,
       });
 
-      setElectionId(electionId);
+      setElectionId(activeElection.id);
       setAuthEmail(email);
 
       navigate("/otp");
@@ -81,38 +113,40 @@ export const EmailPage = () => {
     }
   };
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-8 rounded-lg shadow-md w-96"
-      >
-        <h2 className="text-2xl font-bold mb-6 text-center">
-          Enter Your Email
-        </h2>
-
-        <input
-          type="email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full border p-3 rounded mb-4"
-          placeholder="you@example.com"
-        />
-
-        {error && <div className="text-red-500 text-sm mb-4">{error}</div>}
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-blue-600 text-white py-3 rounded hover:bg-blue-700"
+  if (pageLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white p-8 rounded-lg shadow-md w-96"
         >
-          {loading ? "Sending..." : "Send OTP"}
-        </button>
-        <p className="pt-2 text-xs text-gray-500">
-          You may request a new OTP after 30 seconds.
-        </p>
-      </form>
-    </div>
-  );
+          <h2 className="text-2xl font-bold mb-6 text-center">
+            Enter Your Email
+          </h2>
+
+          <input
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full border p-3 rounded mb-4"
+            placeholder="you@example.com"
+          />
+
+          {error && <div className="text-red-500 text-sm mb-4">{error}</div>}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-blue-600 text-white py-3 rounded hover:bg-blue-700"
+          >
+            {loading ? "Sending..." : "Send OTP"}
+          </button>
+          <p className="pt-2 text-xs text-gray-500">
+            You may request a new OTP after 30 seconds.
+          </p>
+        </form>
+      </div>
+    );
+  }
 };

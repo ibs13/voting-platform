@@ -234,6 +234,12 @@ public class AdminElectionsController : ControllerBase
     [HttpPost("{electionId:guid}/open")]
     public async Task<IActionResult> Open(Guid electionId)
     {
+        var isThisElectionOpen = await _db.Elections.FirstOrDefaultAsync(e => e.Id == electionId && e.Status == "Open");
+        if (isThisElectionOpen is not null) return BadRequest("This election is already open.");
+
+        var openElection = await _db.Elections.FirstOrDefaultAsync(e => e.Status == "Open");
+        if (openElection is not null) return BadRequest("Any of the elections is already open. At a time, only one election can be open.");
+
         var e = await _db.Elections.FirstOrDefaultAsync(x => x.Id == electionId);
         if (e is null) return NotFound();
 

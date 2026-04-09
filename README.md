@@ -150,6 +150,20 @@ The `Jwt:Key` value must be supplied through .NET user secrets for local develop
 
 ---
 
+## Time Handling
+
+Election scheduling is based on Bangladesh local time (`Asia/Dhaka`).
+
+When an admin enters `StartAt` and `EndAt` from the UI, the backend treats those values as Bangladesh local time for election window validation. Time comparisons are performed consistently to avoid timezone mismatch issues between local development and production environments.
+
+Recommendation:
+
+- keep server-side election checks consistent
+- treat admin-entered election times as Bangladesh time
+- use UTC carefully in validation and logging where needed
+
+---
+
 ## API Overview
 
 > Update this section if your route attributes change. The routes below should match your current controller setup.

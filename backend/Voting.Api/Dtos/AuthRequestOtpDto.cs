@@ -1,3 +1,3 @@
 namespace Voting.Api.Dtos;
 
-public record AuthRequestOtpDto(Guid ElectionId, string Email);
+public record AuthRequestOtpDto(string Email);

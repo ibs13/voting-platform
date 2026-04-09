@@ -29,43 +29,46 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> RequestOtp([FromBody] AuthRequestOtpDto dto)
     {
         var email = dto.Email.Trim().ToLowerInvariant();
+        var nowUtc = DateTime.UtcNow;
 
-        // election must exist + open + within time
+        var election = await _db.Elections
+            .FirstOrDefaultAsync(e =>
+                e.Status == "Open" &&
+                e.StartAt <= nowUtc &&
+                e.EndAt >= nowUtc);
 
-        
+        if (election is null)
+        {
+            return BadRequest("No active election is available right now.");
+        }
 
-        var election = await _db.Elections.FirstOrDefaultAsync(election => election.Id == dto.ElectionId);
-
-        
-        if (election is null || election.Id != dto.ElectionId) return NotFound("Election not found.");
-        var now = DateTime.UtcNow;
-        
-        if (election.Status != "Open") return BadRequest("Election is not open.");
-        
-        if(now < election.StartAt || now > election.EndAt) return BadRequest("Election is not active.");
-
-        // voter must be eligible
         var voter = await _db.Voters.FirstOrDefaultAsync(v =>
-            v.ElectionId == dto.ElectionId && v.Email == email && v.IsEligible);
-        if (voter is null) return BadRequest("You are not eligible for this election.");
+            v.ElectionId == election.Id &&
+            v.Email == email &&
+            v.IsEligible);
+
+        if (voter is null)
+        {
+            return BadRequest("You are not eligible for the active election.");
+        }
 
 
         //  Cooldown: prevent immediate repeated requests
         var latestRequest = await _db.OtpChallenges
-            .Where(c => c.ElectionId == dto.ElectionId && c.Email == email)
+            .Where(c => c.ElectionId == election.Id && c.Email == email)
             .OrderByDescending(c => c.CreatedAt)
             .FirstOrDefaultAsync();
 
-        if (latestRequest is not null && now - latestRequest.CreatedAt < OtpCooldown)
+        if (latestRequest is not null && nowUtc - latestRequest.CreatedAt < OtpCooldown)
         {
             return BadRequest("Please wait before requesting another OTP.");
         }
 
         // Rate limit: max N requests in last 10 minutes
-        var windowStart = now.Subtract(OtpRequestWindow);
+        var windowStart = nowUtc.Subtract(OtpRequestWindow);
 
         var recentRequestCount = await _db.OtpChallenges.CountAsync(c =>
-            c.ElectionId == dto.ElectionId &&
+            c.ElectionId == election.Id &&
             c.Email == email &&
             c.CreatedAt >= windowStart);
 
@@ -77,15 +80,15 @@ public class AuthController : ControllerBase
         // Invalidate any previous unused OTPs
         var activeChallenges = await _db.OtpChallenges
             .Where(c =>
-                c.ElectionId == dto.ElectionId &&
+                c.ElectionId == election.Id &&
                 c.Email == email &&
                 c.UsedAt == null &&
-                c.ExpiresAt > now)
+                c.ExpiresAt > nowUtc)
             .ToListAsync();
 
         foreach (var activeChallenge in activeChallenges)
         {
-            activeChallenge.UsedAt = now; // mark old active OTPs unusable
+            activeChallenge.UsedAt = nowUtc; // mark old active OTPs unusable
         }
 
         // generate OTP
@@ -95,7 +98,7 @@ public class AuthController : ControllerBase
 
         var challenge = new OtpChallenge
         {
-            ElectionId = dto.ElectionId,
+            ElectionId = election.Id,
             Email = email,
             OtpHash = otpHash,
             CreatedAt = DateTime.UtcNow,

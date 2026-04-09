@@ -17,6 +17,32 @@ public class ElectionsController : ControllerBase
     {
         _db = db;
     }
+
+    [HttpGet("active")]
+    public async Task<IActionResult> GetActive()
+    {
+        var nowUtc = DateTime.UtcNow;
+
+        var election = await _db.Elections
+            .AsNoTracking()
+            .Where(e => e.Status == "Open" && e.StartAt <= nowUtc && e.EndAt >= nowUtc)
+            .OrderBy(e => e.StartAt)
+            .FirstOrDefaultAsync();
+
+        if (election is null)
+        {
+            return NotFound(new { message = "No active election found." });
+        }
+
+        return Ok(new
+        {
+            election.Id,
+            election.Name,
+            election.Status,
+            election.StartAt,
+            election.EndAt
+        });
+    }
     
     // Voter must be authenticated to view ballot
     [Authorize(Roles = "voter")]
