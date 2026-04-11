@@ -4,10 +4,13 @@ import { OtpPage } from "./pages/OtpPage";
 import { BallotPage } from "./pages/BallotPage";
 import { SuccessPage } from "./pages/SuccessPage";
 import { ResultsPage } from "./pages/ResultsPage";
-import AdminLoginPage from "./pages/AdminLoginPage";
-import AdminDashboardPage from "./pages/AdminDashboardPage";
-import ProtectedLayout from "./layouts/ProtectedLayout";
-import RoleRoute from "./components/RoleRoute";
+import { AdminLoginPage } from "./pages/AdminLoginPage";
+import { AdminDashboardPage } from "./pages/AdminDashboardPage";
+import { ProtectedLayout } from "./layouts/ProtectedLayout";
+import { RoleRoute } from "./components/RoleRoute";
+import { ManageCandidatePage } from "./pages/ManageCandidatePage";
+import { ManageVoterPage } from "./pages/ManageVoterPage";
+import { ManageElectionPage } from "./pages/ManageElectionPage";
 
 const App = () => {
   return (
@@ -35,6 +38,18 @@ const App = () => {
         }
       >
         <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+        <Route
+          path="/admin/manage-elections"
+          element={<ManageElectionPage />}
+        />
+        <Route
+          path="/admin/manage-candidates/:electionId"
+          element={<ManageCandidatePage />}
+        />
+        <Route
+          path="/admin/manage-voters/:electionId"
+          element={<ManageVoterPage />}
+        />
       </Route>
 
       <Route

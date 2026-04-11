@@ -8,7 +8,7 @@ type Props = {
   children: React.ReactNode;
 };
 
-export default function RoleRoute({ allow, children }: Props) {
+export const RoleRoute = ({ allow, children }: Props) => {
   const { token, role, isAuthReady } = useAuth();
 
   if (!isAuthReady) {
@@ -26,4 +26,4 @@ export default function RoleRoute({ allow, children }: Props) {
   }
 
   return <>{children}</>;
-}
+};

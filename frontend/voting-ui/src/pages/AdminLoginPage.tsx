@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { api, setAuthToken } from "../api/axios";
 import { useAuth } from "../context/AuthContext";
 
-export default function AdminLoginPage() {
+export const AdminLoginPage = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -46,9 +46,7 @@ export default function AdminLoginPage() {
         onSubmit={handleSubmit}
         className="bg-white p-8 rounded-lg shadow-md w-96"
       >
-        <h2 className="text-2xl font-bold mb-6 text-center">
-          Admin Login
-        </h2>
+        <h2 className="text-2xl font-bold mb-6 text-center">Admin Login</h2>
 
         <input
           type="text"
@@ -68,9 +66,7 @@ export default function AdminLoginPage() {
           className="w-full border p-3 rounded mb-4"
         />
 
-        {error && (
-          <div className="text-red-500 text-sm mb-4">{error}</div>
-        )}
+        {error && <div className="text-red-500 text-sm mb-4">{error}</div>}
 
         <button
           type="submit"
@@ -82,4 +78,4 @@ export default function AdminLoginPage() {
       </form>
     </div>
   );
-}
+};

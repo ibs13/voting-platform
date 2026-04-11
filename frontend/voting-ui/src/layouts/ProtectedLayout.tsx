@@ -2,7 +2,7 @@ import { Outlet } from "react-router-dom";
 import { LogoutButton } from "../components/LogoutButton";
 import { useAuth } from "../context/AuthContext";
 
-export default function ProtectedLayout() {
+export const ProtectedLayout = () => {
   const { role } = useAuth();
 
   return (
@@ -20,4 +20,4 @@ export default function ProtectedLayout() {
       </main>
     </div>
   );
-}
+};
