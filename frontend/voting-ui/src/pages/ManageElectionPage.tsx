@@ -106,6 +106,24 @@ export const ManageElectionPage = () => {
     }
   };
 
+  const handleDeleteElection = async (electionId: string) => {
+    clearFeedback();
+
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this election?",
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const res = await api.delete(`/admin/elections/${electionId}`);
+      setMessage(res.data?.message ?? "Election deleted successfully.");
+      await loadElections();
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, "Failed to delete election"));
+    }
+  };
+
   return (
     <div className="w-full max-w-5xl bg-white rounded-lg shadow-md p-8 space-y-8">
       <h2 className="text-2xl font-bold">Create Election</h2>
