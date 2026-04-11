@@ -54,7 +54,6 @@ function getApiErrorMessage(err: unknown, fallback: string): string {
 
 export const ManageElectionPage = () => {
   const [elections, setElections] = useState<Election[]>([]);
-  const [selectedElectionId, setSelectedElectionId] = useState("");
 
   const [name, setName] = useState("");
   const [startAt, setStartAt] = useState("");
@@ -74,14 +73,6 @@ export const ManageElectionPage = () => {
       const res = await api.get("/admin/elections");
       const loadedElections: Election[] = res.data;
       setElections(loadedElections);
-
-      setSelectedElectionId((prev) => {
-        if (prev && loadedElections.some((election) => election.id === prev)) {
-          return prev;
-        }
-
-        return loadedElections[0]?.id ?? "";
-      });
     } catch (err: unknown) {
       setError(getApiErrorMessage(err, "Failed to load elections"));
     } finally {

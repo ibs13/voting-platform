@@ -80,6 +80,28 @@ public class AdminElectionsController : ControllerBase
         return Ok(elections);
     }
 
+    [HttpDelete("{electionId:guid}")]
+    public async Task<IActionResult> DeleteElection(Guid electionId)
+    {
+
+        var election = await _db.Elections
+            .FirstOrDefaultAsync(e => e.Id == electionId);
+
+        if (election is null)
+            return NotFound("Election not found.");
+
+        if (election.StartAt <= DateTime.UtcNow)
+            return BadRequest("You can only delete elections that haven't started yet.");
+
+        if (election.Status == "Open" || election.Status == "Closed")
+            return BadRequest("You cannot delete an election that is open or closed.");
+
+        _db.Elections.Remove(election);
+        await _db.SaveChangesAsync();
+
+        return Ok(new { message = "Election deleted successfully." });
+    }
+
     [HttpPost("{electionId:guid}/candidates")]
     public async Task<IActionResult> AddCandidate(Guid electionId, [FromBody] AdminCreateCandidateDto dto)
     {
