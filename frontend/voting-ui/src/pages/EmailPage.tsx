@@ -61,6 +61,7 @@ export const EmailPage = () => {
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [pageError, setPageError] = useState<string | null>(null);
   const [activeElection, setActiveElection] =
     useState<ActiveElectionResponse | null>(null);
 
@@ -70,7 +71,7 @@ export const EmailPage = () => {
   useEffect(() => {
     const loadActiveElection = async () => {
       try {
-        setError(null);
+        setPageError(null);
 
         const response =
           await api.get<ActiveElectionResponse>("/elections/active");
@@ -79,7 +80,7 @@ export const EmailPage = () => {
         setActiveElection(election);
         setElectionId(election.id);
       } catch (error: unknown) {
-        setError(getErrorMessage(error));
+        setPageError(getErrorMessage(error));
       } finally {
         setPageLoading(false);
       }
@@ -118,6 +119,17 @@ export const EmailPage = () => {
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="bg-white p-8 rounded-lg shadow-md w-96 text-center">
           <p className="text-gray-600">Loading election...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (pageError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100 p-6">
+        <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow">
+          <h1 className="text-2xl font-bold mb-4">Election Not Available</h1>
+          <p className="text-gray-600">{pageError}</p>
         </div>
       </div>
     );
