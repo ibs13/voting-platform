@@ -1,7 +1,16 @@
 import { useEffect, useState, useCallback } from "react";
-import { AxiosError } from "axios";
 import { api } from "../api/axios";
 import { useParams } from "react-router-dom";
+import { Alert } from "../components/ui/Alert";
+import { FormInput } from "../components/ui/FormInput";
+import { FormSelect } from "../components/ui/FormSelect";
+import { FormFileInput } from "../components/ui/FormFileInput";
+import { Button } from "../components/ui/Button";
+import { PageCard } from "../components/ui/PageCard";
+import { SectionCard } from "../components/ui/SectionCard";
+import { DataTable } from "../components/ui/DataTable";
+import { ConfirmDialog } from "../components/ui/ConfirmDialog";
+import { getUserFriendlyErrorMessage } from "../utils/getUserFriendlyErrorMessage";
 
 type Candidate = {
   id: string;
@@ -9,48 +18,6 @@ type Candidate = {
   batch: string | null;
   office: string;
 };
-
-function getApiErrorMessage(err: unknown, fallback: string): string {
-  if (!(err instanceof AxiosError)) return fallback;
-
-  const data = err.response?.data;
-
-  if (typeof data === "string") return data;
-
-  if (data && typeof data === "object") {
-    const maybeErrors = (data as { errors?: unknown }).errors;
-    const maybeTitle = (data as { title?: unknown }).title;
-    const maybeMessage = (data as { message?: unknown }).message;
-
-    if (maybeErrors && typeof maybeErrors === "object") {
-      const messages = Object.values(
-        maybeErrors as Record<string, unknown>,
-      ).flatMap((value) => {
-        if (Array.isArray(value)) {
-          return value.filter(
-            (item): item is string => typeof item === "string",
-          );
-        }
-
-        return typeof value === "string" ? [value] : [];
-      });
-
-      if (messages.length > 0) {
-        return messages.join(", ");
-      }
-    }
-
-    if (typeof maybeMessage === "string" && maybeMessage.trim()) {
-      return maybeMessage;
-    }
-
-    if (typeof maybeTitle === "string" && maybeTitle.trim()) {
-      return maybeTitle;
-    }
-  }
-
-  return fallback;
-}
 
 export const ManageCandidatePage = () => {
   const { electionId } = useParams<{ electionId: string }>();
@@ -66,31 +33,38 @@ export const ManageCandidatePage = () => {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loadingCandidates, setLoadingCandidates] = useState(false);
 
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(
+    null,
+  );
+
   const clearFeedback = () => {
     setMessage(null);
     setError(null);
   };
 
-  const loadCandidates = async (electionId: string) => {
-    if (!electionId) {
+  const loadCandidates = async (selectedElectionId: string) => {
+    if (!selectedElectionId) {
       setCandidates([]);
       return;
     }
 
     try {
       setLoadingCandidates(true);
-      const res = await api.get(`/admin/elections/${electionId}/candidates`);
+      const res = await api.get(
+        `/admin/elections/${selectedElectionId}/candidates`,
+      );
       setCandidates(res.data as Candidate[]);
     } catch (err: unknown) {
-      setError(getApiErrorMessage(err, "Failed to load candidates"));
+      setError(getUserFriendlyErrorMessage(err, "loadCandidates"));
       setCandidates([]);
     } finally {
       setLoadingCandidates(false);
     }
   };
 
-  const loadLists = useCallback(async (electionId: string) => {
-    await Promise.all([loadCandidates(electionId)]);
+  const loadLists = useCallback(async (selectedElectionId: string) => {
+    await Promise.all([loadCandidates(selectedElectionId)]);
   }, []);
 
   useEffect(() => {
@@ -122,9 +96,10 @@ export const ManageCandidatePage = () => {
       setCandidateName("");
       setCandidateBatch("");
       setCandidateOffice("President");
+
       await loadCandidates(electionId);
     } catch (err: unknown) {
-      setError(getApiErrorMessage(err, "Failed to add candidate"));
+      setError(getUserFriendlyErrorMessage(err, "addCandidate"));
     }
   };
 
@@ -147,7 +122,7 @@ export const ManageCandidatePage = () => {
       formData.append("file", candidateFile);
 
       const res = await api.post(
-        `/admin/elections/${electionId!}/candidates/upload`,
+        `/admin/elections/${electionId}/candidates/upload`,
         formData,
         {
           headers: {
@@ -160,158 +135,161 @@ export const ManageCandidatePage = () => {
         `${res.data.message} Imported: ${res.data.imported}, Skipped: ${res.data.skipped}`,
       );
       setCandidateFile(null);
+
       await loadCandidates(electionId);
     } catch (err: unknown) {
-      setError(getApiErrorMessage(err, "Failed to upload candidate CSV"));
+      setError(getUserFriendlyErrorMessage(err, "uploadCandidates"));
     }
   };
 
-  const handleDeleteCandidate = async (candidateId: string) => {
+  const askDeleteCandidate = (candidateId: string) => {
+    setSelectedCandidateId(candidateId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDeleteCandidate = async () => {
+    if (!selectedCandidateId) return;
+
     clearFeedback();
-
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this candidate?",
-    );
-
-    if (!confirmed) return;
 
     try {
       const res = await api.delete(
-        `/admin/elections/candidates/${candidateId}`,
+        `/admin/elections/candidates/${selectedCandidateId}`,
       );
       setMessage(res.data?.message ?? "Candidate deleted successfully.");
+      setIsDeleteDialogOpen(false);
+      setSelectedCandidateId(null);
       await loadCandidates(electionId!);
     } catch (err: unknown) {
-      setError(getApiErrorMessage(err, "Failed to delete candidate"));
+      setError(getUserFriendlyErrorMessage(err, "deleteCandidate"));
     }
   };
 
-  if (error === "Election not found.") {
+  const handleCancelDeleteCandidate = () => {
+    setIsDeleteDialogOpen(false);
+    setSelectedCandidateId(null);
+  };
+
+  const candidateColumns = [
+    {
+      key: "fullName",
+      header: "Full Name",
+      render: (candidate: Candidate) => candidate.fullName,
+    },
+    {
+      key: "batch",
+      header: "Batch",
+      render: (candidate: Candidate) => candidate.batch || "-",
+    },
+    {
+      key: "office",
+      header: "Office",
+      render: (candidate: Candidate) => candidate.office,
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      render: (candidate: Candidate) => (
+        <Button
+          type="button"
+          variant="danger"
+          className="px-3 py-1 text-sm"
+          onClick={() => askDeleteCandidate(candidate.id)}
+        >
+          Delete
+        </Button>
+      ),
+    },
+  ];
+
+  if (error === "This election could not be found.") {
     return (
-      <div className="w-full max-w-5xl bg-white rounded-lg shadow-md p-8">
-        <h2 className="text-2xl font-bold">Manage Candidates</h2>
-        <div className="p-3 rounded bg-amber-50 text-amber-700 mt-4">
-          {error}
-        </div>
-      </div>
+      <PageCard title="Manage Candidates" className="max-w-5xl">
+        <Alert type="error">
+          Election not found. Please select a valid election.
+        </Alert>
+      </PageCard>
     );
-  } else {
-    return (
-      <div className="w-full max-w-5xl bg-white rounded-lg shadow-md p-8 space-y-8">
-        <h2 className="text-2xl font-bold">Manage Candidates</h2>
+  }
 
-        {message && (
-          <div className="p-3 rounded bg-green-50 text-green-700">
-            {message}
-          </div>
-        )}
+  return (
+    <>
+      <PageCard title="Manage Candidates" className="max-w-5xl space-y-8">
+        {message && <Alert type="success">{message}</Alert>}
+        {error && <Alert type="error">{error}</Alert>}
 
-        {error && (
-          <div className="p-3 rounded bg-red-50 text-red-700">{error}</div>
-        )}
-
-        <section className="border rounded p-4 space-y-4">
-          <h3 className="text-lg font-semibold">Add Candidate</h3>
-
+        <SectionCard title="Add Candidate" className="space-y-4">
           <form onSubmit={handleAddCandidate} className="grid gap-3">
-            <input
+            <FormInput
               type="text"
+              label="Candidate Full Name"
               placeholder="Candidate full name"
               value={candidateName}
               onChange={(e) => setCandidateName(e.target.value)}
-              className="border p-3 rounded"
               required
             />
 
-            <input
+            <FormInput
               type="text"
+              label="Batch"
               placeholder="Batch (optional)"
               value={candidateBatch}
               onChange={(e) => setCandidateBatch(e.target.value)}
-              className="border p-3 rounded"
             />
 
-            <select
+            <FormSelect
+              label="Office"
               value={candidateOffice}
               onChange={(e) => setCandidateOffice(e.target.value)}
-              className="border p-3 rounded"
               required
             >
               <option value="President">President</option>
               <option value="Secretary">Secretary</option>
               <option value="Treasurer">Treasurer</option>
-            </select>
+            </FormSelect>
 
-            <button
-              type="submit"
-              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 w-fit"
-            >
+            <Button type="submit" variant="success" className="w-fit">
               Add Candidate
-            </button>
+            </Button>
           </form>
-        </section>
+        </SectionCard>
 
-        <section className="border rounded p-4 space-y-4">
-          <h3 className="text-lg font-semibold">Upload Candidates CSV</h3>
-
+        <SectionCard title="Upload Candidates CSV" className="space-y-4">
           <form onSubmit={handleUploadCandidatesCsv} className="grid gap-3">
-            <input
-              type="file"
+            <FormFileInput
+              label="Candidate CSV File"
               accept=".csv"
               onChange={(e) => setCandidateFile(e.target.files?.[0] || null)}
-              className="border p-3 rounded"
             />
 
-            <button
-              type="submit"
-              className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 w-fit"
-            >
+            <Button type="submit" variant="indigo" className="w-fit">
               Upload Candidates CSV
-            </button>
+            </Button>
           </form>
-        </section>
+        </SectionCard>
 
-        <section className="border rounded p-4 space-y-4">
-          <h3 className="text-lg font-semibold">Candidate List</h3>
+        <SectionCard title="Candidate List" className="space-y-4">
+          <DataTable
+            columns={candidateColumns}
+            data={candidates}
+            keyField="id"
+            loading={loadingCandidates}
+            loadingText="Loading candidates..."
+            emptyMessage="No candidates found."
+          />
+        </SectionCard>
+      </PageCard>
 
-          {loadingCandidates ? (
-            <div className="text-gray-600">Loading candidates...</div>
-          ) : candidates.length === 0 ? (
-            <div className="text-gray-600">No candidates found.</div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full border border-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="border p-3 text-left">Full Name</th>
-                    <th className="border p-3 text-left">Batch</th>
-                    <th className="border p-3 text-left">Office</th>
-                    <th className="border p-3 text-left">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {candidates.map((candidate) => (
-                    <tr key={candidate.id}>
-                      <td className="border p-3">{candidate.fullName}</td>
-                      <td className="border p-3">{candidate.batch || "-"}</td>
-                      <td className="border p-3">{candidate.office}</td>
-                      <td className="border p-3">
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteCandidate(candidate.id)}
-                          className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
-      </div>
-    );
-  }
+      <ConfirmDialog
+        open={isDeleteDialogOpen}
+        title="Delete Candidate"
+        message="Are you sure you want to delete this candidate?"
+        confirmText="Delete"
+        cancelText="Cancel"
+        confirmVariant="danger"
+        onConfirm={handleConfirmDeleteCandidate}
+        onCancel={handleCancelDeleteCandidate}
+      />
+    </>
+  );
 };

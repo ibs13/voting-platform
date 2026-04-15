@@ -1,7 +1,15 @@
 import { useEffect, useState, useCallback } from "react";
-import { AxiosError } from "axios";
 import { api } from "../api/axios";
 import { useParams } from "react-router-dom";
+import { Alert } from "../components/ui/Alert";
+import { FormInput } from "../components/ui/FormInput";
+import { FormFileInput } from "../components/ui/FormFileInput";
+import { Button } from "../components/ui/Button";
+import { PageCard } from "../components/ui/PageCard";
+import { SectionCard } from "../components/ui/SectionCard";
+import { DataTable } from "../components/ui/DataTable";
+import { ConfirmDialog } from "../components/ui/ConfirmDialog";
+import { getUserFriendlyErrorMessage } from "../utils/getUserFriendlyErrorMessage";
 
 type Voter = {
   id: string;
@@ -9,86 +17,47 @@ type Voter = {
   isEligible: boolean;
 };
 
-function getApiErrorMessage(err: unknown, fallback: string): string {
-  if (!(err instanceof AxiosError)) return fallback;
-
-  const data = err.response?.data;
-
-  if (typeof data === "string") return data;
-
-  if (data && typeof data === "object") {
-    const maybeErrors = (data as { errors?: unknown }).errors;
-    const maybeTitle = (data as { title?: unknown }).title;
-    const maybeMessage = (data as { message?: unknown }).message;
-
-    if (maybeErrors && typeof maybeErrors === "object") {
-      const messages = Object.values(
-        maybeErrors as Record<string, unknown>,
-      ).flatMap((value) => {
-        if (Array.isArray(value)) {
-          return value.filter(
-            (item): item is string => typeof item === "string",
-          );
-        }
-
-        return typeof value === "string" ? [value] : [];
-      });
-
-      if (messages.length > 0) {
-        return messages.join(", ");
-      }
-    }
-
-    if (typeof maybeMessage === "string" && maybeMessage.trim()) {
-      return maybeMessage;
-    }
-
-    if (typeof maybeTitle === "string" && maybeTitle.trim()) {
-      return maybeTitle;
-    }
-  }
-
-  return fallback;
-}
-
 export const ManageVoterPage = () => {
   const { electionId } = useParams<{ electionId: string }>();
 
   const [voterEmail, setVoterEmail] = useState("");
-
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-
   const [voterFile, setVoterFile] = useState<File | null>(null);
 
   const [voters, setVoters] = useState<Voter[]>([]);
   const [loadingVoters, setLoadingVoters] = useState(false);
+
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedVoterId, setSelectedVoterId] = useState<string | null>(null);
 
   const clearFeedback = () => {
     setMessage(null);
     setError(null);
   };
 
-  const loadVoters = async (electionId: string) => {
-    if (!electionId) {
+  const loadVoters = async (selectedElectionId: string) => {
+    if (!selectedElectionId) {
       setVoters([]);
       return;
     }
 
     try {
       setLoadingVoters(true);
-      const res = await api.get(`/admin/elections/${electionId}/voters`);
+      const res = await api.get(
+        `/admin/elections/${selectedElectionId}/voters`,
+      );
       setVoters(res.data as Voter[]);
     } catch (err: unknown) {
-      setError(getApiErrorMessage(err, "Failed to load voters"));
+      setError(getUserFriendlyErrorMessage(err, "loadVoters"));
       setVoters([]);
     } finally {
       setLoadingVoters(false);
     }
   };
 
-  const loadLists = useCallback(async (electionId: string) => {
-    await Promise.all([loadVoters(electionId)]);
+  const loadLists = useCallback(async (selectedElectionId: string) => {
+    await Promise.all([loadVoters(selectedElectionId)]);
   }, []);
 
   useEffect(() => {
@@ -118,7 +87,7 @@ export const ManageVoterPage = () => {
       setVoterEmail("");
       await loadVoters(electionId);
     } catch (err: unknown) {
-      setError(getApiErrorMessage(err, "Failed to add voter"));
+      setError(getUserFriendlyErrorMessage(err, "addVoter"));
     }
   };
 
@@ -156,135 +125,134 @@ export const ManageVoterPage = () => {
       setVoterFile(null);
       await loadVoters(electionId);
     } catch (err: unknown) {
-      setError(getApiErrorMessage(err, "Failed to upload voter CSV"));
+      setError(getUserFriendlyErrorMessage(err, "uploadVoters"));
     }
   };
 
-  const handleDeleteVoter = async (voterId: string) => {
+  const askDeleteVoter = (voterId: string) => {
+    setSelectedVoterId(voterId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDeleteVoter = async () => {
+    if (!selectedVoterId) return;
+
     clearFeedback();
 
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this voter?",
-    );
-
-    if (!confirmed) return;
-
     try {
-      const res = await api.delete(`/admin/elections/voters/${voterId}`);
+      const res = await api.delete(
+        `/admin/elections/voters/${selectedVoterId}`,
+      );
       setMessage(res.data?.message ?? "Voter deleted successfully.");
+      setIsDeleteDialogOpen(false);
+      setSelectedVoterId(null);
       await loadVoters(electionId!);
     } catch (err: unknown) {
-      setError(getApiErrorMessage(err, "Failed to delete voter"));
+      setError(getUserFriendlyErrorMessage(err, "deleteVoter"));
     }
   };
 
-  if (error === "Election not found.") {
+  const handleCancelDeleteVoter = () => {
+    setIsDeleteDialogOpen(false);
+    setSelectedVoterId(null);
+  };
+
+  const voterColumns = [
+    {
+      key: "email",
+      header: "Email",
+      render: (voter: Voter) => voter.email,
+    },
+    {
+      key: "isEligible",
+      header: "Eligible",
+      render: (voter: Voter) => (voter.isEligible ? "Yes" : "No"),
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      render: (voter: Voter) => (
+        <Button
+          type="button"
+          variant="danger"
+          className="px-3 py-1 text-sm"
+          onClick={() => askDeleteVoter(voter.id)}
+        >
+          Delete
+        </Button>
+      ),
+    },
+  ];
+
+  if (error === "This election could not be found.") {
     return (
-      <div className="w-full max-w-5xl bg-white rounded-lg shadow-md p-8">
-        <h2 className="text-2xl font-bold">Manage Voters</h2>
-        <div className="p-3 rounded bg-amber-50 text-amber-700 mt-4">
-          {error}
-        </div>
-      </div>
+      <PageCard title="Manage Voters" className="max-w-5xl">
+        <Alert type="error">
+          Election not found. Please select a valid election.
+        </Alert>
+      </PageCard>
     );
-  } else {
-    return (
-      <div className="w-full max-w-5xl bg-white rounded-lg shadow-md p-8 space-y-8">
-        <h2 className="text-2xl font-bold">Manage Voters</h2>
+  }
 
-        {message && (
-          <div className="p-3 rounded bg-green-50 text-green-700">
-            {message}
-          </div>
-        )}
+  return (
+    <>
+      <PageCard title="Manage Voters" className="max-w-5xl space-y-8">
+        {message && <Alert type="success">{message}</Alert>}
+        {error && <Alert type="error">{error}</Alert>}
 
-        {error && (
-          <div className="p-3 rounded bg-red-50 text-red-700">{error}</div>
-        )}
-
-        <section className="border rounded p-4 space-y-4">
-          <h3 className="text-lg font-semibold">Add Voter</h3>
-
+        <SectionCard title="Add Voter" className="space-y-4">
           <form onSubmit={handleAddVoter} className="grid gap-3">
-            <input
+            <FormInput
               type="email"
+              label="Voter Email"
               placeholder="Voter email"
               value={voterEmail}
               onChange={(e) => setVoterEmail(e.target.value)}
-              className="border p-3 rounded"
               required
             />
 
-            <button
-              type="submit"
-              className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 w-fit"
-            >
+            <Button type="submit" variant="purple" className="w-fit">
               Add Voter
-            </button>
+            </Button>
           </form>
-        </section>
+        </SectionCard>
 
-        <section className="border rounded p-4 space-y-4">
-          <h3 className="text-lg font-semibold">Upload Voters CSV</h3>
-
+        <SectionCard title="Upload Voters CSV" className="space-y-4">
           <form onSubmit={handleUploadVotersCsv} className="grid gap-3">
-            <input
-              type="file"
+            <FormFileInput
+              label="Voter CSV File"
               accept=".csv"
               onChange={(e) => setVoterFile(e.target.files?.[0] || null)}
-              className="border p-3 rounded"
             />
 
-            <button
-              type="submit"
-              className="bg-pink-600 text-white px-4 py-2 rounded hover:bg-pink-700 w-fit"
-            >
+            <Button type="submit" variant="pink" className="w-fit">
               Upload Voters CSV
-            </button>
+            </Button>
           </form>
-        </section>
+        </SectionCard>
 
-        <section className="border rounded p-4 space-y-4">
-          <h3 className="text-lg font-semibold">Voter List</h3>
+        <SectionCard title="Voter List" className="space-y-4">
+          <DataTable
+            columns={voterColumns}
+            data={voters}
+            keyField="id"
+            loading={loadingVoters}
+            loadingText="Loading voters..."
+            emptyMessage="No voters found."
+          />
+        </SectionCard>
+      </PageCard>
 
-          {loadingVoters ? (
-            <div className="text-gray-600">Loading voters...</div>
-          ) : voters.length === 0 ? (
-            <div className="text-gray-600">No voters found.</div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full border border-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="border p-3 text-left">Email</th>
-                    <th className="border p-3 text-left">Eligible</th>
-                    <th className="border p-3 text-left">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {voters.map((voter) => (
-                    <tr key={voter.id}>
-                      <td className="border p-3">{voter.email}</td>
-                      <td className="border p-3">
-                        {voter.isEligible ? "Yes" : "No"}
-                      </td>
-                      <td className="border p-3">
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteVoter(voter.id)}
-                          className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
-      </div>
-    );
-  }
+      <ConfirmDialog
+        open={isDeleteDialogOpen}
+        title="Delete Voter"
+        message="Are you sure you want to delete this voter?"
+        confirmText="Delete"
+        cancelText="Cancel"
+        confirmVariant="danger"
+        onConfirm={handleConfirmDeleteVoter}
+        onCancel={handleCancelDeleteVoter}
+      />
+    </>
+  );
 };

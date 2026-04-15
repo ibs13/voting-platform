@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
-import { AxiosError } from "axios";
 import { api } from "../api/axios";
 import { useNavigate } from "react-router-dom";
+import { Alert } from "../components/ui/Alert";
+import { Button } from "../components/ui/Button";
+import { FormSelect } from "../components/ui/FormSelect";
+import { PageCard } from "../components/ui/PageCard";
+import { SectionCard } from "../components/ui/SectionCard";
+import { getUserFriendlyErrorMessage } from "../utils/getUserFriendlyErrorMessage";
 
 type Election = {
   id: string;
@@ -15,48 +20,6 @@ type TurnoutResponse = {
   eligible: number;
   voted: number;
 };
-
-function getApiErrorMessage(err: unknown, fallback: string): string {
-  if (!(err instanceof AxiosError)) return fallback;
-
-  const data = err.response?.data;
-
-  if (typeof data === "string") return data;
-
-  if (data && typeof data === "object") {
-    const maybeErrors = (data as { errors?: unknown }).errors;
-    const maybeTitle = (data as { title?: unknown }).title;
-    const maybeMessage = (data as { message?: unknown }).message;
-
-    if (maybeErrors && typeof maybeErrors === "object") {
-      const messages = Object.values(
-        maybeErrors as Record<string, unknown>,
-      ).flatMap((value) => {
-        if (Array.isArray(value)) {
-          return value.filter(
-            (item): item is string => typeof item === "string",
-          );
-        }
-
-        return typeof value === "string" ? [value] : [];
-      });
-
-      if (messages.length > 0) {
-        return messages.join(", ");
-      }
-    }
-
-    if (typeof maybeMessage === "string" && maybeMessage.trim()) {
-      return maybeMessage;
-    }
-
-    if (typeof maybeTitle === "string" && maybeTitle.trim()) {
-      return maybeTitle;
-    }
-  }
-
-  return fallback;
-}
 
 export const AdminDashboardPage = () => {
   const navigate = useNavigate();
@@ -89,7 +52,7 @@ export const AdminDashboardPage = () => {
         return loadedElections[0]?.id ?? "";
       });
     } catch (err: unknown) {
-      setError(getApiErrorMessage(err, "Failed to load elections"));
+      setError(getUserFriendlyErrorMessage(err, "loadElections"));
     } finally {
       setLoadingElections(false);
     }
@@ -102,7 +65,6 @@ export const AdminDashboardPage = () => {
   useEffect(() => {
     if (!selectedElectionId) {
       setTurnout(null);
-      return;
     }
   }, [selectedElectionId]);
 
@@ -120,7 +82,7 @@ export const AdminDashboardPage = () => {
       );
       setTurnout(res.data);
     } catch (err: unknown) {
-      setError(getApiErrorMessage(err, "Failed to fetch turnout"));
+      setError(getUserFriendlyErrorMessage(err, "loadTurnout"));
     }
   };
 
@@ -138,7 +100,7 @@ export const AdminDashboardPage = () => {
       setTurnout(null);
       await loadElections();
     } catch (err: unknown) {
-      setError(getApiErrorMessage(err, "Failed to open election"));
+      setError(getUserFriendlyErrorMessage(err, "openElection"));
     }
   };
 
@@ -158,7 +120,7 @@ export const AdminDashboardPage = () => {
       setTurnout(null);
       await loadElections();
     } catch (err: unknown) {
-      setError(getApiErrorMessage(err, "Failed to close election"));
+      setError(getUserFriendlyErrorMessage(err, "closeElection"));
     }
   };
 
@@ -175,9 +137,9 @@ export const AdminDashboardPage = () => {
 
   const handleManageElections = () => {
     clearFeedback();
-
-    navigate(`/admin/manage-elections`);
+    navigate("/admin/manage-elections");
   };
+
   const handleManageCandidates = () => {
     clearFeedback();
 
@@ -188,6 +150,7 @@ export const AdminDashboardPage = () => {
 
     navigate(`/admin/manage-candidates/${selectedElectionId}`);
   };
+
   const handleManageVoters = () => {
     clearFeedback();
 
@@ -200,27 +163,18 @@ export const AdminDashboardPage = () => {
   };
 
   return (
-    <div className="w-full max-w-5xl bg-white rounded-lg shadow-md p-8 space-y-8">
-      <h2 className="text-2xl font-bold">Admin Dashboard</h2>
+    <PageCard title="Admin Dashboard" className="max-w-5xl space-y-8">
+      {message && <Alert type="success">{message}</Alert>}
+      {error && <Alert type="error">{error}</Alert>}
 
-      {message && (
-        <div className="p-3 rounded bg-green-50 text-green-700">{message}</div>
-      )}
-
-      {error && (
-        <div className="p-3 rounded bg-red-50 text-red-700">{error}</div>
-      )}
-
-      <section className="border rounded p-4 space-y-4">
-        <h3 className="text-lg font-semibold">Select Election</h3>
-
+      <SectionCard title="Select Election" className="space-y-4">
         {loadingElections ? (
           <div className="text-gray-600">Loading elections...</div>
         ) : (
-          <select
+          <FormSelect
+            label="Election"
             value={selectedElectionId}
             onChange={(e) => setSelectedElectionId(e.target.value)}
-            className="border p-3 rounded w-full"
           >
             <option value="">Select election</option>
             {elections.map((election) => (
@@ -228,84 +182,52 @@ export const AdminDashboardPage = () => {
                 {election.name} ({election.status})
               </option>
             ))}
-          </select>
+          </FormSelect>
         )}
-      </section>
+      </SectionCard>
 
-      <section className="border rounded p-4 space-y-4">
-        <h3 className="text-lg font-semibold">Election Manager</h3>
-
+      <SectionCard title="Election Manager" className="space-y-4">
         <div className="flex flex-wrap gap-3">
-          <button
-            type="button"
-            onClick={handleManageElections}
-            className="bg-sky-600 text-white px-4 py-2 rounded hover:bg-sky-700"
-          >
+          <Button type="button" onClick={handleManageElections}>
             Manage Elections
-          </button>
+          </Button>
 
-          <button
-            type="button"
-            onClick={handleManageCandidates}
-            className="bg-sky-600 text-white px-4 py-2 rounded hover:bg-sky-700"
-          >
+          <Button type="button" onClick={handleManageCandidates}>
             Manage Candidates
-          </button>
+          </Button>
 
-          <button
-            type="button"
-            onClick={handleManageVoters}
-            className="bg-sky-600 text-white px-4 py-2 rounded hover:bg-sky-700"
-          >
+          <Button type="button" onClick={handleManageVoters}>
             Manage Voters
-          </button>
+          </Button>
         </div>
-      </section>
+      </SectionCard>
 
-      <section className="border rounded p-4 space-y-4">
-        <h3 className="text-lg font-semibold">Election Controls</h3>
-
+      <SectionCard title="Election Controls" className="space-y-4">
         <div className="flex flex-wrap gap-3">
-          <button
-            type="button"
-            onClick={handleGetTurnout}
-            className="bg-sky-600 text-white px-4 py-2 rounded hover:bg-sky-700"
-          >
+          <Button type="button" onClick={handleGetTurnout}>
             View Turnout
-          </button>
+          </Button>
 
-          <button
-            type="button"
-            onClick={handleOpenElection}
-            className="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700"
-          >
+          <Button type="button" variant="success" onClick={handleOpenElection}>
             Open Election
-          </button>
+          </Button>
 
-          <button
-            type="button"
-            onClick={handleCloseElection}
-            className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-          >
+          <Button type="button" variant="danger" onClick={handleCloseElection}>
             Close Election
-          </button>
+          </Button>
 
-          <button
-            type="button"
-            onClick={handleViewResults}
-            className="bg-slate-700 text-white px-4 py-2 rounded hover:bg-slate-800"
-          >
+          <Button type="button" variant="secondary" onClick={handleViewResults}>
             View Results
-          </button>
+          </Button>
         </div>
 
         {turnout && (
-          <div className="border rounded p-4 bg-gray-50">
+          <div className="rounded border bg-gray-50 p-4">
             <p>Eligible voters: {turnout.eligible}</p>
             <p>Votes cast: {turnout.voted}</p>
           </div>
         )}
-      </section>
-    </div>
+      </SectionCard>
+    </PageCard>
   );
 };

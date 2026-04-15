@@ -2,6 +2,11 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useEffect, useState } from "react";
 import { api } from "../api/axios";
+import { Alert } from "../components/ui/Alert";
+import { getUserFriendlyErrorMessage } from "../utils/getUserFriendlyErrorMessage";
+import { Button } from "../components/ui/Button";
+import { FormSelect } from "../components/ui/FormSelect";
+import { PageShell } from "../components/ui/PageShell";
 
 type Candidate = {
   id: string;
@@ -17,7 +22,8 @@ export const BallotPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [pageError, setPageError] = useState<string | null>(null);
+  const [formerror, setFormError] = useState<string | null>(null);
 
   const [president, setPresident] = useState("");
   const [secretary, setSecretary] = useState("");
@@ -28,7 +34,7 @@ export const BallotPage = () => {
 
     if (!electionId || !token) {
       setLoading(false);
-      setError("Session expired or not ready. Please log in again.");
+      setPageError("Session expired or not ready. Please log in again.");
       return;
     }
 
@@ -45,10 +51,7 @@ export const BallotPage = () => {
         const res = await api.get(`/elections/${electionId}/ballot`);
         setCandidates(res.data.candidates);
       } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Failed to load ballot";
-        setError(errorMessage);
-        console.log(errorMessage);
+        setPageError(getUserFriendlyErrorMessage(err, "ballotLoad"));
       } finally {
         setLoading(false);
       }
@@ -58,17 +61,12 @@ export const BallotPage = () => {
   }, [isAuthReady, electionId, token, navigate]);
 
   if (!isAuthReady) {
-    return <div className="p-10">Preparing session...</div>;
+    return <Alert type="info">Checking session... Please wait.</Alert>;
   }
-  if (loading) return <div className="p-10">Loading ballot...</div>;
-  if (error) return <div className="p-10 text-red-500">{error}</div>;
+  if (loading) return <Alert type="info">Loading ballot...</Alert>;
 
-  if (!electionId || !token) {
-    return (
-      <div className="p-10">
-        Session not ready. Please wait or log in again.
-      </div>
-    );
+  if (pageError) {
+    return <Alert type="error">{pageError}</Alert>;
   }
 
   const presidents = candidates.filter((c) => c.office === "President");
@@ -77,9 +75,10 @@ export const BallotPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(null);
 
     if (!president || !secretary || !treasurer) {
-      alert("Please select all 3 positions.");
+      setFormError("Please select a candidate for all three positions.");
       return;
     }
 
@@ -88,7 +87,7 @@ export const BallotPage = () => {
       president === treasurer ||
       secretary === treasurer
     ) {
-      alert("Please select 3 different candidates.");
+      setFormError("Please select three different candidates.");
       return;
     }
 
@@ -104,8 +103,7 @@ export const BallotPage = () => {
 
       navigate("/success");
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Vote failed";
-      alert(errorMessage);
+      setFormError(getUserFriendlyErrorMessage(err, "ballotSubmit"));
     } finally {
       setSubmitting(false);
     }
@@ -113,7 +111,7 @@ export const BallotPage = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-gray-100 flex justify-center py-10">
+      <PageShell>
         <form
           onSubmit={handleSubmit}
           className="bg-white p-8 rounded shadow-md w-[600px]"
@@ -122,13 +120,21 @@ export const BallotPage = () => {
             Cast Your Vote
           </h2>
 
+          {formerror && (
+            <div className="mb-4">
+              <Alert type="error">{formerror}</Alert>
+            </div>
+          )}
+
           {/* President */}
           <div className="mb-6">
-            <label className="font-semibold">President</label>
-            <select
+            <FormSelect
+              label="President"
               value={president}
-              onChange={(e) => setPresident(e.target.value)}
-              className="w-full border p-2 rounded mt-2"
+              onChange={(e) => {
+                setPresident(e.target.value);
+                setFormError(null);
+              }}
             >
               <option value="">Select candidate</option>
               {presidents.map((c) => (
@@ -136,16 +142,18 @@ export const BallotPage = () => {
                   {c.fullName} {c.batch ? `(${c.batch})` : ""}
                 </option>
               ))}
-            </select>
+            </FormSelect>
           </div>
 
           {/* Secretary */}
           <div className="mb-6">
-            <label className="font-semibold">Secretary</label>
-            <select
+            <FormSelect
+              label="Secretary"
               value={secretary}
-              onChange={(e) => setSecretary(e.target.value)}
-              className="w-full border p-2 rounded mt-2"
+              onChange={(e) => {
+                setSecretary(e.target.value);
+                setFormError(null);
+              }}
             >
               <option value="">Select candidate</option>
               {secretaries.map((c) => (
@@ -153,15 +161,18 @@ export const BallotPage = () => {
                   {c.fullName} {c.batch ? `(${c.batch})` : ""}
                 </option>
               ))}
-            </select>
+            </FormSelect>
           </div>
 
           {/* Treasurer */}
           <div className="mb-6">
-            <label className="font-semibold">Treasurer</label>
-            <select
+            <FormSelect
+              label="Treasurer"
               value={treasurer}
-              onChange={(e) => setTreasurer(e.target.value)}
+              onChange={(e) => {
+                setTreasurer(e.target.value);
+                setFormError(null);
+              }}
               className="w-full border p-2 rounded mt-2"
             >
               <option value="">Select candidate</option>
@@ -170,18 +181,19 @@ export const BallotPage = () => {
                   {c.fullName} {c.batch ? `(${c.batch})` : ""}
                 </option>
               ))}
-            </select>
+            </FormSelect>
           </div>
 
-          <button
+          <Button
             type="submit"
+            variant="success"
+            fullWidth
             disabled={submitting}
-            className="w-full bg-green-600 text-white py-3 rounded hover:bg-green-700"
           >
-            Submit Vote
-          </button>
+            {submitting ? "Submitting..." : "Submit Vote"}
+          </Button>
         </form>
-      </div>
+      </PageShell>
     </>
   );
 };

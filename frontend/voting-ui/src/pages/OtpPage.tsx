@@ -2,6 +2,12 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api/axios";
 import { useAuth } from "../context/AuthContext";
+import { Alert } from "../components/ui/Alert";
+import { getUserFriendlyErrorMessage } from "../utils/getUserFriendlyErrorMessage";
+import { Button } from "../components/ui/Button";
+import { FormInput } from "../components/ui/FormInput";
+import { PageCard } from "../components/ui/PageCard";
+import { PageShell } from "../components/ui/PageShell";
 
 export const OtpPage = () => {
   const [otp, setOtp] = useState("");
@@ -12,7 +18,11 @@ export const OtpPage = () => {
   const { electionId, email, setToken, setRole } = useAuth();
 
   if (!electionId || !email) {
-    return <div className="p-10">Invalid session. Go back.</div>;
+    return (
+      <div className="p-10">
+        Your session has expired. Please go back and request a new OTP.
+      </div>
+    );
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -35,40 +45,33 @@ export const OtpPage = () => {
         navigate("/ballot");
       }
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : "Invalid OTP";
-      setError(errorMessage);
+      setError(getUserFriendlyErrorMessage(err, "otpVerify"));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-8 rounded-lg shadow-md w-96"
-      >
-        <h2 className="text-2xl font-bold mb-6 text-center">Enter OTP</h2>
+    <PageShell centered>
+      <h2 className="text-2xl font-bold mb-3 text-center"></h2>
+      <PageCard title="Verify OTP" className="w-full max-w-md">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <FormInput
+            type="text"
+            label="OTP Code"
+            required
+            value={otp}
+            onChange={(e) => setOtp(e.target.value)}
+            placeholder="6-digit code"
+          />
 
-        <input
-          type="text"
-          required
-          value={otp}
-          onChange={(e) => setOtp(e.target.value)}
-          className="w-full border p-3 rounded mb-4"
-          placeholder="6-digit code"
-        />
+          {error && <Alert type="error">{error}</Alert>}
 
-        {error && <div className="text-red-500 text-sm mb-4">{error}</div>}
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-blue-600 text-white py-3 rounded hover:bg-blue-700"
-        >
-          {loading ? "Verifying..." : "Verify OTP"}
-        </button>
-      </form>
-    </div>
+          <Button type="submit" fullWidth disabled={loading}>
+            {loading ? "Verifying..." : "Verify OTP"}
+          </Button>
+        </form>
+      </PageCard>
+    </PageShell>
   );
 };

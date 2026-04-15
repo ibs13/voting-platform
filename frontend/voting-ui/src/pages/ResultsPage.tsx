@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { AxiosError } from "axios";
 import { useParams } from "react-router-dom";
 import { api } from "../api/axios";
+import { PageShell } from "../components/ui/PageShell";
 
 type CandidateResult = {
   candidateId: string;
@@ -76,7 +77,7 @@ export const ResultsPage = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-100 py-10 flex justify-center">
+      <PageShell>
         <div className="bg-white p-8 rounded shadow-md w-[800px]">
           <h2 className="text-2xl font-bold mb-4 text-center">
             Election Results
@@ -85,7 +86,7 @@ export const ResultsPage = () => {
             {error}
           </div>
         </div>
-      </div>
+      </PageShell>
     );
   }
 
