@@ -1,5 +1,5 @@
 import { Outlet } from "react-router-dom";
-import { LogoutButton } from "../components/LogoutButton";
+import { LogoutButton } from "../shared/components/LogoutButton";
 import { useAuth } from "../context/AuthContext";
 
 export const ProtectedLayout = () => {

@@ -1,16 +1,16 @@
 import { Route, Routes } from "react-router-dom";
-import { EmailPage } from "./pages/EmailPage";
-import { OtpPage } from "./pages/OtpPage";
-import { BallotPage } from "./pages/BallotPage";
-import { SuccessPage } from "./pages/SuccessPage";
-import { ResultsPage } from "./pages/ResultsPage";
-import { AdminLoginPage } from "./pages/AdminLoginPage";
-import { AdminDashboardPage } from "./pages/AdminDashboardPage";
-import { ProtectedLayout } from "./layouts/ProtectedLayout";
-import { RoleRoute } from "./components/RoleRoute";
-import { ManageCandidatePage } from "./pages/ManageCandidatePage";
-import { ManageVoterPage } from "./pages/ManageVoterPage";
-import { ManageElectionPage } from "./pages/ManageElectionPage";
+import { EmailPage } from "../features/auth/pages/EmailPage";
+import { OtpPage } from "../features/auth/pages/OtpPage";
+import { BallotPage } from "../features/voter/ballot/pages/BallotPage";
+import { SuccessPage } from "../features/voter/success/pages/SuccessPage";
+import { ResultsPage } from "../pages/ResultsPage";
+import { AdminLoginPage } from "../features/auth/pages/AdminLoginPage";
+import { AdminDashboardPage } from "../pages/AdminDashboardPage";
+import { ProtectedLayout } from "../layouts/ProtectedLayout";
+import { RoleRoute } from "./routes/RoleRoute";
+import { ManageCandidatePage } from "../pages/ManageCandidatePage";
+import { ManageVoterPage } from "../pages/ManageVoterPage";
+import { ManageElectionPage } from "../pages/ManageElectionPage";
 
 const App = () => {
   return (

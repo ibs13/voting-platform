@@ -1,12 +1,12 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useEffect, useState } from "react";
-import { api } from "../api/axios";
-import { Alert } from "../components/ui/Alert";
-import { getUserFriendlyErrorMessage } from "../utils/getUserFriendlyErrorMessage";
-import { Button } from "../components/ui/Button";
-import { FormSelect } from "../components/ui/FormSelect";
-import { PageShell } from "../components/ui/PageShell";
+import { api } from "../../../../shared/api/axios";
+import { Alert } from "../../../../shared/ui/Alert";
+import { getUserFriendlyErrorMessage } from "../../../../shared/utils/getUserFriendlyErrorMessage";
+import { Button } from "../../../../shared/ui/Button";
+import { FormSelect } from "../../../../shared/ui/FormSelect";
+import { PageShell } from "../../../../shared/ui/PageShell";
 
 type Candidate = {
   id: string;

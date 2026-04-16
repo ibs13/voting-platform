@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { api } from "../api/axios";
+import { api } from "../shared/api/axios";
 import { useNavigate } from "react-router-dom";
-import { Alert } from "../components/ui/Alert";
-import { Button } from "../components/ui/Button";
-import { FormSelect } from "../components/ui/FormSelect";
-import { PageCard } from "../components/ui/PageCard";
-import { SectionCard } from "../components/ui/SectionCard";
-import { getUserFriendlyErrorMessage } from "../utils/getUserFriendlyErrorMessage";
+import { Alert } from "../shared/ui/Alert";
+import { Button } from "../shared/ui/Button";
+import { FormSelect } from "../shared/ui/FormSelect";
+import { PageCard } from "../shared/ui/PageCard";
+import { SectionCard } from "../shared/ui/SectionCard";
+import { getUserFriendlyErrorMessage } from "../shared/utils/getUserFriendlyErrorMessage";
 
 type Election = {
   id: string;

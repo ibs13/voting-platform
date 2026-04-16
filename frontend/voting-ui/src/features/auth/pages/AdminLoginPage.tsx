@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { api, setAuthToken } from "../api/axios";
+import { api, setAuthToken } from "../../../shared/api/axios";
 import { useAuth } from "../context/AuthContext";
-import { Alert } from "../components/ui/Alert";
-import { FormInput } from "../components/ui/FormInput";
-import { Button } from "../components/ui/Button";
-import { PageCard } from "../components/ui/PageCard";
-import { getUserFriendlyErrorMessage } from "../utils/getUserFriendlyErrorMessage";
-import { PageShell } from "../components/ui/PageShell";
+import { Alert } from "../../../shared/ui/Alert";
+import { FormInput } from "../../../shared/ui/FormInput";
+import { Button } from "../../../shared/ui/Button";
+import { PageCard } from "../../../shared/ui/PageCard";
+import { getUserFriendlyErrorMessage } from "../../../shared/utils/getUserFriendlyErrorMessage";
+import { PageShell } from "../../../shared/ui/PageShell";
 
 export const AdminLoginPage = () => {
   const [username, setUsername] = useState("");

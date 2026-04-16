@@ -6,7 +6,7 @@ import {
   useEffect,
   useState,
 } from "react";
-import { setAuthToken, api } from "../api/axios";
+import { setAuthToken, api } from "../shared/api/axios";
 
 type Role = "admin" | "voter" | null;
 
