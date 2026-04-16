@@ -1,16 +1,16 @@
 import { useEffect, useState, useCallback } from "react";
-import { api } from "../shared/api/axios";
+import { api } from "@/shared/api/axios";
 import { useParams } from "react-router-dom";
-import { Alert } from "../shared/ui/Alert";
-import { FormInput } from "../shared/ui/FormInput";
-import { FormSelect } from "../shared/ui/FormSelect";
-import { FormFileInput } from "../shared/ui/FormFileInput";
-import { Button } from "../shared/ui/Button";
-import { PageCard } from "../shared/ui/PageCard";
-import { SectionCard } from "../shared/ui/SectionCard";
-import { DataTable } from "../shared/ui/DataTable";
-import { ConfirmDialog } from "../shared/ui/ConfirmDialog";
-import { getUserFriendlyErrorMessage } from "../shared/utils/getUserFriendlyErrorMessage";
+import { Alert } from "@/shared/ui/Alert";
+import { FormInput } from "@/shared/ui/FormInput";
+import { FormSelect } from "@/shared/ui/FormSelect";
+import { FormFileInput } from "@/shared/ui/FormFileInput";
+import { Button } from "@/shared/ui/Button";
+import { PageCard } from "@/shared/ui/PageCard";
+import { SectionCard } from "@/shared/ui/SectionCard";
+import { DataTable } from "@/shared/ui/DataTable";
+import { ConfirmDialog } from "@/shared/ui/ConfirmDialog";
+import { getUserFriendlyErrorMessage } from "@/shared/utils/getUserFriendlyErrorMessage";
 
 type Candidate = {
   id: string;

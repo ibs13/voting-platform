@@ -1,6 +1,6 @@
 import { Outlet } from "react-router-dom";
-import { LogoutButton } from "../shared/components/LogoutButton";
-import { useAuth } from "../context/AuthContext";
+import { LogoutButton } from "@/shared/components/LogoutButton";
+import { useAuth } from "@/features/auth/context/AuthContext";
 
 export const ProtectedLayout = () => {
   const { role } = useAuth();

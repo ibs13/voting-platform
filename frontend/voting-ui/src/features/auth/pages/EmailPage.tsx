@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { api } from "../../../shared/api/axios";
-import { useAuth } from "../context/AuthContext";
-import { Alert } from "../../../shared/ui/Alert";
-import { getUserFriendlyErrorMessage } from "../../../shared/utils/getUserFriendlyErrorMessage";
-import { Button } from "../../../shared/ui/Button";
-import { FormInput } from "../../../shared/ui/FormInput";
-import { PageCard } from "../../../shared/ui/PageCard";
-import { PageShell } from "../../../shared/ui/PageShell";
+import { api } from "@/shared/api/axios";
+import { useAuth } from "@/features/auth/context/AuthContext";
+import { Alert } from "@/shared/ui/Alert";
+import { getUserFriendlyErrorMessage } from "@/shared/utils/getUserFriendlyErrorMessage";
+import { Button } from "@/shared/ui/Button";
+import { FormInput } from "@/shared/ui/FormInput";
+import { PageCard } from "@/shared/ui/PageCard";
+import { PageShell } from "@/shared/ui/PageShell";
 
 type ActiveElectionResponse = {
   id: string;

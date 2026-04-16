@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { AxiosError } from "axios";
 import { useParams } from "react-router-dom";
-import { api } from "../shared/api/axios";
-import { PageShell } from "../shared/ui/PageShell";
+import { api } from "@/shared/api/axios";
+import { PageShell } from "@/shared/ui/PageShell";
 
 type CandidateResult = {
   candidateId: string;

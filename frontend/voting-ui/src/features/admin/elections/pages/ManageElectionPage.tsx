@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
-import { api } from "../shared/api/axios";
-import { Alert } from "../shared/ui/Alert";
-import { FormInput } from "../shared/ui/FormInput";
-import { Button } from "../shared/ui/Button";
-import { PageCard } from "../shared/ui/PageCard";
-import { SectionCard } from "../shared/ui/SectionCard";
-import { DataTable } from "../shared/ui/DataTable";
-import { StatusBadge } from "../shared/ui/StatusBadge";
-import { ConfirmDialog } from "../shared/ui/ConfirmDialog";
-import { getUserFriendlyErrorMessage } from "../shared/utils/getUserFriendlyErrorMessage";
+import { api } from "@/shared/api/axios";
+import { Alert } from "@/shared/ui/Alert";
+import { FormInput } from "@/shared/ui/FormInput";
+import { Button } from "@/shared/ui/Button";
+import { PageCard } from "@/shared/ui/PageCard";
+import { SectionCard } from "@/shared/ui/SectionCard";
+import { DataTable } from "@/shared/ui/DataTable";
+import { StatusBadge } from "@/shared/ui/StatusBadge";
+import { ConfirmDialog } from "@/shared/ui/ConfirmDialog";
+import { getUserFriendlyErrorMessage } from "@/shared/utils/getUserFriendlyErrorMessage";
 
 type Election = {
   id: string;

@@ -1,16 +1,16 @@
 import { Route, Routes } from "react-router-dom";
-import { EmailPage } from "../features/auth/pages/EmailPage";
-import { OtpPage } from "../features/auth/pages/OtpPage";
-import { BallotPage } from "../features/voter/ballot/pages/BallotPage";
-import { SuccessPage } from "../features/voter/success/pages/SuccessPage";
-import { ResultsPage } from "../pages/ResultsPage";
-import { AdminLoginPage } from "../features/auth/pages/AdminLoginPage";
-import { AdminDashboardPage } from "../pages/AdminDashboardPage";
-import { ProtectedLayout } from "../layouts/ProtectedLayout";
-import { RoleRoute } from "./routes/RoleRoute";
-import { ManageCandidatePage } from "../pages/ManageCandidatePage";
-import { ManageVoterPage } from "../pages/ManageVoterPage";
-import { ManageElectionPage } from "../pages/ManageElectionPage";
+import { EmailPage } from "@/features/auth/pages/EmailPage";
+import { OtpPage } from "@/features/auth/pages/OtpPage";
+import { BallotPage } from "@/features/voter/ballot/pages/BallotPage";
+import { SuccessPage } from "@/features/voter/success/pages/SuccessPage";
+import { ResultsPage } from "@/features/shared/results/pages/ResultsPage";
+import { AdminLoginPage } from "@/features/auth/pages/AdminLoginPage";
+import { AdminDashboardPage } from "@/features/admin/dashboard/pages/AdminDashboardPage";
+import { ProtectedLayout } from "@/layouts/ProtectedLayout";
+import { RoleRoute } from "@/app/routes/RoleRoute";
+import { ManageCandidatePage } from "@/features/admin/candidates/pages/ManageCandidatePage";
+import { ManageVoterPage } from "@/features/admin/voters/pages/ManageVoterPage";
+import { ManageElectionPage } from "@/features/admin/elections/pages/ManageElectionPage";
 
 const App = () => {
   return (
