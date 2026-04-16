@@ -2,8 +2,10 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using Voting.Api.Data;
-using Voting.Api.Services;
+using Voting.Api.Infrastructure.Data;
+using Voting.Api.Infrastructure.Auth;
+using Voting.Api.Infrastructure.Messaging;
+using Voting.Api.Infrastructure.Imports;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
