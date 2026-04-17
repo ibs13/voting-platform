@@ -159,7 +159,18 @@ public class AuthController : ControllerBase
             other.UsedAt = DateTime.UtcNow;
         }
 
-        var token = _jwt.CreateVoterToken(dto.ElectionId, email);
+        await _db.SaveChangesAsync();
+
+        var voterEntity = await _db.Voters.FirstOrDefaultAsync(v =>
+            v.ElectionId == dto.ElectionId &&
+            v.Email == email);
+
+        if (voterEntity is null)
+        {
+            return BadRequest("Voter not found.");
+        }
+
+        var token = _jwt.CreateVoterToken(voterEntity.Id.ToString(), email, dto.ElectionId.ToString());
 
         return Ok(new { token });
     }

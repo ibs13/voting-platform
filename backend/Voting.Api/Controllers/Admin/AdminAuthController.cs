@@ -32,7 +32,7 @@ public class AdminAuthController : ControllerBase
         var ok = BCrypt.Net.BCrypt.Verify(dto.Password, admin.PasswordHash);
         if (!ok) return Unauthorized("Invalid credentials.");
 
-        var token = _jwt.CreateAdminToken(admin.Username);
+        var token = _jwt.CreateAdminToken(admin.Id.ToString(), admin.Username);
         return Ok(new { token });
     }
 }
