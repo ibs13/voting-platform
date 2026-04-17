@@ -46,7 +46,7 @@ public class AdminElectionController : ControllerBase
             Name = dto.Name.Trim(),
             StartAt = startAtUtc,
             EndAt = endAtUtc,
-            Status = "Draft"
+            Status = 0
         };
 
         _db.Elections.Add(election);
@@ -56,7 +56,7 @@ public class AdminElectionController : ControllerBase
         {
             election.Id,
             election.Name,
-            election.Status,
+            Status = election.Status.ToString(),
             StartAtUtc = election.StartAt,
             EndAtUtc = election.EndAt,                                                                                                                                                     
         });
@@ -72,7 +72,7 @@ public class AdminElectionController : ControllerBase
         {
             Id = e.Id,
             Name = e.Name,
-            Status = e.Status,
+            Status = e.Status.ToString(),
             StartAt = e.StartAt,
             EndAt = e.EndAt
         })
@@ -94,7 +94,7 @@ public class AdminElectionController : ControllerBase
         if (election.StartAt <= DateTime.UtcNow)
             return BadRequest("You can only delete elections that haven't started yet.");
 
-        if (election.Status == "Open" || election.Status == "Closed")
+        if (election.Status == ElectionStatus.Open || election.Status == ElectionStatus.Closed)
             return BadRequest("You cannot delete an election that is open or closed.");
 
         _db.Elections.Remove(election);
@@ -256,16 +256,16 @@ public class AdminElectionController : ControllerBase
     [HttpPost("{electionId:guid}/open")]
     public async Task<IActionResult> Open(Guid electionId)
     {
-        var isThisElectionOpen = await _db.Elections.FirstOrDefaultAsync(e => e.Id == electionId && e.Status == "Open");
+        var isThisElectionOpen = await _db.Elections.FirstOrDefaultAsync(e => e.Id == electionId && e.Status == ElectionStatus.Open);
         if (isThisElectionOpen is not null) return BadRequest("This election is already open.");
 
-        var openElection = await _db.Elections.FirstOrDefaultAsync(e => e.Status == "Open");
+        var openElection = await _db.Elections.FirstOrDefaultAsync(e => e.Status == ElectionStatus.Open);
         if (openElection is not null) return BadRequest("Any of the elections is already open. At a time, only one election can be open.");
 
         var e = await _db.Elections.FirstOrDefaultAsync(x => x.Id == electionId);
         if (e is null) return NotFound();
 
-        e.Status = "Open";
+        e.Status = ElectionStatus.Open;
         await _db.SaveChangesAsync();
         return Ok(new { message = "Election opened." });
     }
@@ -276,7 +276,7 @@ public class AdminElectionController : ControllerBase
         var e = await _db.Elections.FirstOrDefaultAsync(x => x.Id == electionId);
         if (e is null) return NotFound();
 
-        e.Status = "Closed";
+        e.Status = ElectionStatus.Closed;
         await _db.SaveChangesAsync();
         return Ok(new { message = "Election closed." });
     }

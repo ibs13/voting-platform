@@ -13,7 +13,7 @@ public static class DbSeeder
         var election = new Election
         {
             Name = "Debating Society Alumni Election",
-            Status = "Open",
+            Status = ElectionStatus.Draft,
             StartAt = DateTime.UtcNow.AddDays(-1),
             EndAt = DateTime.UtcNow.AddDays(7)
         };

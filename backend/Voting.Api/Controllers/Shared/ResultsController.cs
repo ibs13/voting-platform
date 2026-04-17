@@ -29,7 +29,7 @@ public class ResultsController : ControllerBase
         if (election is null)
             return NotFound("Election not found.");
 
-        if (election.Status != "Closed")
+        if (election.Status != ElectionStatus.Closed)
             return StatusCode(
                 StatusCodes.Status403Forbidden,
                 "Results are not available until the election is closed."

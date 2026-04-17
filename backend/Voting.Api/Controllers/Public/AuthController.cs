@@ -5,6 +5,7 @@ using Voting.Api.Domain.Entities;
 using Voting.Api.Contracts.Requests.Auth;
 using Voting.Api.Infrastructure.Auth;
 using Voting.Api.Infrastructure.Messaging;
+using Voting.Api.Domain.Enums;
 
 namespace Voting.Api.Controllers.Public;
 
@@ -34,7 +35,7 @@ public class AuthController : ControllerBase
 
         var election = await _db.Elections
             .FirstOrDefaultAsync(e =>
-                e.Status == "Open" &&
+                e.Status == ElectionStatus.Open &&
                 e.StartAt <= nowUtc &&
                 e.EndAt >= nowUtc);
 

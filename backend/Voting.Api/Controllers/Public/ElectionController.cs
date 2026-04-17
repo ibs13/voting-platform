@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Voting.Api.Infrastructure.Data;
 using Voting.Api.Contracts.Responses.Voting;
 using Voting.Api.Infrastructure.Auth;
+using Voting.Api.Domain.Enums;
 
 namespace Voting.Api.Controllers.Public;
 
@@ -25,7 +26,7 @@ public class ElectionsController : ControllerBase
 
         var election = await _db.Elections
             .AsNoTracking()
-            .Where(e => e.Status == "Open" && e.StartAt <= nowUtc && e.EndAt >= nowUtc)
+            .Where(e => e.Status == ElectionStatus.Open && e.StartAt <= nowUtc && e.EndAt >= nowUtc)
             .OrderBy(e => e.StartAt)
             .FirstOrDefaultAsync();
 
@@ -61,7 +62,7 @@ public class ElectionsController : ControllerBase
         if (election is null) return NotFound("Election not found");
 
         var now = DateTime.UtcNow;
-        if (election.Status != "Open") return BadRequest("Election is not open.");
+        if (election.Status != ElectionStatus.Open) return BadRequest("Election is not open.");
         if (now < election.StartAt || now > election.EndAt) return BadRequest("Election is not active.");
 
         // return candidates

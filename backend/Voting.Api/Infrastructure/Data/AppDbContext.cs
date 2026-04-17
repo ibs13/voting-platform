@@ -1,11 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using Voting.Api.Domain.Entities;
+using Voting.Api.Domain.Enums;
 
 namespace Voting.Api.Infrastructure.Data;
 
 public class AppDbContext : DbContext
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) {}
+    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
     public DbSet<Election> Elections => Set<Election>();
     public DbSet<Candidate> Candidates => Set<Candidate>();
@@ -20,24 +21,76 @@ public class AppDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<Voter>()
-            .HasIndex(v => new { v.ElectionId, v.Email })
-            .IsUnique();
+        modelBuilder.Entity<Election>(entity =>
+        {
+            entity.Property(e => e.Name)
+                .IsRequired()
+                .HasMaxLength(200);
 
-        modelBuilder.Entity<VoteLock>()
-            .HasIndex(vl => new { vl.ElectionId, vl.VoterId })
-            .IsUnique();
+            entity.Property(e => e.Status)
+                .HasConversion<string>()
+                .HasMaxLength(20)
+                .IsRequired();
+        });
 
-        modelBuilder.Entity<Vote>()
-            .HasIndex(v => new { v.BallotSubmissionId, v.Office })
-            .IsUnique();
+        modelBuilder.Entity<Candidate>(entity =>
+        {
+            entity.Property(c => c.FullName)
+                .IsRequired()
+                .HasMaxLength(150);
 
-        modelBuilder.Entity<Vote>()
-            .HasIndex(v => new { v.BallotSubmissionId, v.CandidateId })
-            .IsUnique();
+            entity.Property(c => c.Office)
+                .IsRequired()
+                .HasMaxLength(50);
+        });
 
-        modelBuilder.Entity<AdminUser>()
-            .HasIndex(a => a.Username)
-            .IsUnique();
+        modelBuilder.Entity<Voter>(entity =>
+        {
+            entity.Property(v => v.Email)
+                .IsRequired()
+                .HasMaxLength(256);
+
+            entity.HasIndex(v => new { v.ElectionId, v.Email })
+                .IsUnique();
+        });
+
+        modelBuilder.Entity<OtpChallenge>(entity =>
+        {
+            entity.Property(o => o.Email)
+                .IsRequired()
+                .HasMaxLength(256);
+
+            entity.Property(o => o.OtpHash)
+                .IsRequired();
+        });
+
+        modelBuilder.Entity<VoteLock>(entity =>
+        {
+            entity.HasIndex(vl => new { vl.ElectionId, vl.VoterId })
+                .IsUnique();
+        });
+
+        modelBuilder.Entity<Vote>(entity =>
+        {
+            entity.Property(v => v.Office)
+                .IsRequired()
+                .HasMaxLength(50);
+
+            entity.HasIndex(v => new { v.BallotSubmissionId, v.Office })
+                .IsUnique();
+
+            entity.HasIndex(v => new { v.BallotSubmissionId, v.CandidateId })
+                .IsUnique();
+        });
+
+        modelBuilder.Entity<AdminUser>(entity =>
+        {
+            entity.Property(a => a.Username)
+                .IsRequired()
+                .HasMaxLength(50);
+
+            entity.HasIndex(a => a.Username)
+                .IsUnique();
+        });
     }
 }

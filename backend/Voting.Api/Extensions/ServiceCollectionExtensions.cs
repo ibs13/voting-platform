@@ -99,7 +99,7 @@ public static class ServiceCollectionExtensions
             .Get<string[]>();
 
         if (allowedOrigins is null || allowedOrigins.Length == 0)
-            throw new InvalidOperationException("CORS allowed origins are missing.");
+            throw new InvalidOperationException("CORS allowed origins are missing. Configure 'Cors:AllowedOrigins'.");
 
         services.AddCors(options =>
         {

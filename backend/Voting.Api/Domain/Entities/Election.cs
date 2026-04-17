@@ -1,3 +1,4 @@
+using Voting.Api.Domain.Enums;
 namespace Voting.Api.Domain.Entities;
 
 public class Election
@@ -6,7 +7,7 @@ public class Election
     public string Name { get; set; } = "";
     public DateTime StartAt { get; set; }
     public DateTime EndAt { get; set; }
-    public string Status { get; set; } = "Draft"; // Draft/Open/Closed
+    public ElectionStatus Status { get; set; } = ElectionStatus.Draft;
 
     public List<Candidate> Candidates { get; set; } = [];
     public List<Voter> Voters { get; set; } = [];
