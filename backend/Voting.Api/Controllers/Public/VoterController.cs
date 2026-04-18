@@ -86,14 +86,14 @@ public class VotesController : ControllerBase
             {
                 ElectionId = dto.ElectionId,
                 VoterId = voter.Id,
-                LockedAt = DateTimeOffset.UtcNow
+                LockedAt = DateTime.UtcNow
             });
 
             // 2) Create submission group
             var submission = new BallotSubmission
             {
                 ElectionId = dto.ElectionId,
-                CastAt = DateTimeOffset.UtcNow
+                CastAt = DateTime.UtcNow
             };
             _db.BallotSubmissions.Add(submission);
 
@@ -105,7 +105,7 @@ public class VotesController : ControllerBase
                     BallotSubmissionId = submission.Id,
                     Office = Office.President,
                     CandidateId = dto.PresidentCandidateId,
-                    CastAt = DateTimeOffset.UtcNow
+                    CastAt = DateTime.UtcNow
                 },
                 new Vote
                 {
@@ -113,7 +113,7 @@ public class VotesController : ControllerBase
                     BallotSubmissionId = submission.Id,
                     Office = Office.Secretary,
                     CandidateId = dto.SecretaryCandidateId,
-                    CastAt = DateTimeOffset.UtcNow
+                    CastAt = DateTime.UtcNow
                 },
                 new Vote
                 {
@@ -121,7 +121,7 @@ public class VotesController : ControllerBase
                     BallotSubmissionId = submission.Id,
                     Office = Office.Treasurer,
                     CandidateId = dto.TreasurerCandidateId,
-                    CastAt = DateTimeOffset.UtcNow
+                    CastAt = DateTime.UtcNow
                 }
             );
 

@@ -111,12 +111,19 @@ public class AdminElectionController : ControllerBase
 
         if (string.IsNullOrWhiteSpace(dto.FullName))
             return BadRequest("Candidate name is required.");
+        if (string.IsNullOrWhiteSpace(dto.Session))
+            return BadRequest("Session is required.");
+        if (string.IsNullOrWhiteSpace(dto.Department))
+            return BadRequest("Department is required.");
+        if (!Enum.IsDefined(dto.Office))
+            return BadRequest("Invalid office value.");
 
         var candidate = new Candidate
         {
             ElectionId = electionId,
             FullName = dto.FullName.Trim(),
-            Batch = string.IsNullOrWhiteSpace(dto.Batch) ? null : dto.Batch.Trim(),
+            Session = dto.Session.Trim(),
+            Department = dto.Department.Trim(),
             Office = dto.Office
         };
 
@@ -128,7 +135,8 @@ public class AdminElectionController : ControllerBase
             candidate.Id,
             candidate.ElectionId,
             candidate.FullName,
-            candidate.Batch,
+            candidate.Session,
+            candidate.Department,
             Office = candidate.Office.ToString()
         });
     }
@@ -147,7 +155,8 @@ public class AdminElectionController : ControllerBase
             {
                 Id = c.Id,
                 FullName = c.FullName,
-                Batch = c.Batch,
+                Session = c.Session,
+                Department = c.Department,
                 Office = c.Office.ToString()
             })
             .ToListAsync();
@@ -184,6 +193,12 @@ public class AdminElectionController : ControllerBase
 
         if (string.IsNullOrWhiteSpace(dto.Email))
             return BadRequest("Email is required.");
+        if (string.IsNullOrWhiteSpace(dto.Name))
+            return BadRequest("Name is required.");
+        if (string.IsNullOrWhiteSpace(dto.Session))
+            return BadRequest("Session is required.");
+        if (string.IsNullOrWhiteSpace(dto.Department))
+            return BadRequest("Department is required.");
 
         var normalizedEmail = dto.Email.Trim().ToLowerInvariant();
 
@@ -197,6 +212,9 @@ public class AdminElectionController : ControllerBase
         {
             ElectionId = electionId,
             Email = normalizedEmail,
+            Name = dto.Name.Trim(),
+            Session = dto.Session.Trim(),
+            Department = dto.Department.Trim(),
             IsEligible = true
         };
 
@@ -207,7 +225,10 @@ public class AdminElectionController : ControllerBase
         {
             voter.Id,
             voter.ElectionId,
+            voter.Name,
             voter.Email,
+            voter.Session,
+            voter.Department,
             voter.IsEligible
         });
     }
@@ -225,7 +246,10 @@ public class AdminElectionController : ControllerBase
             .Select(v => new AdminVoterListItemResponse
             {
                 Id = v.Id,
+                Name = v.Name,
                 Email = v.Email,
+                Session = v.Session,
+                Department = v.Department,
                 IsEligible = v.IsEligible
             })
             .ToListAsync();
@@ -305,15 +329,23 @@ public class AdminElectionController : ControllerBase
             return BadRequest("CSV file is empty.");
 
         var header = rows[0];
-        if (header.Length < 1 || !string.Equals(header[0], "email", StringComparison.OrdinalIgnoreCase))
-            return BadRequest("Voters CSV header must be: email");
+        if (header.Length < 4
+            || !string.Equals(header[0], "email", StringComparison.OrdinalIgnoreCase)
+            || !string.Equals(header[1], "name", StringComparison.OrdinalIgnoreCase)
+            || !string.Equals(header[2], "session", StringComparison.OrdinalIgnoreCase)
+            || !string.Equals(header[3], "department", StringComparison.OrdinalIgnoreCase))
+            return BadRequest("Voters CSV header must be: email,name,session,department");
 
         var imported = 0;
         var skipped = 0;
 
         foreach (var row in rows.Skip(1))
         {
-            if (row.Length < 1 || string.IsNullOrWhiteSpace(row[0]))
+            if (row.Length < 4
+                || string.IsNullOrWhiteSpace(row[0])
+                || string.IsNullOrWhiteSpace(row[1])
+                || string.IsNullOrWhiteSpace(row[2])
+                || string.IsNullOrWhiteSpace(row[3]))
             {
                 skipped++;
                 continue;
@@ -334,6 +366,9 @@ public class AdminElectionController : ControllerBase
             {
                 ElectionId = electionId,
                 Email = email,
+                Name = row[1].Trim(),
+                Session = row[2].Trim(),
+                Department = row[3].Trim(),
                 IsEligible = true
             });
 
@@ -365,30 +400,33 @@ public class AdminElectionController : ControllerBase
             return BadRequest("CSV file is empty.");
 
         var header = rows[0];
-        if (header.Length < 3
+        if (header.Length < 4
             || !string.Equals(header[0], "fullName", StringComparison.OrdinalIgnoreCase)
-            || !string.Equals(header[2], "office", StringComparison.OrdinalIgnoreCase))
-            return BadRequest("Candidates CSV header must be: fullName,batch,office");
+            || !string.Equals(header[1], "session", StringComparison.OrdinalIgnoreCase)
+            || !string.Equals(header[2], "department", StringComparison.OrdinalIgnoreCase)
+            || !string.Equals(header[3], "office", StringComparison.OrdinalIgnoreCase))
+            return BadRequest("Candidates CSV header must be: fullName,session,department,office");
 
         var imported = 0;
         var skipped = 0;
 
         foreach (var row in rows.Skip(1))
         {
-            if (row.Length < 3 || string.IsNullOrWhiteSpace(row[0]) || string.IsNullOrWhiteSpace(row[2]))
+            if (row.Length < 4 || string.IsNullOrWhiteSpace(row[0]) || string.IsNullOrWhiteSpace(row[3]))
             {
                 skipped++;
                 continue;
             }
 
-            if (!Enum.TryParse<Office>(row[2].Trim(), ignoreCase: true, out var office))
+            if (!Enum.TryParse<Office>(row[3].Trim(), ignoreCase: true, out var office))
             {
                 skipped++;
                 continue;
             }
 
             var fullName = row[0].Trim();
-            var batch = !string.IsNullOrWhiteSpace(row[1]) ? row[1].Trim() : null;
+            var session = !string.IsNullOrWhiteSpace(row[1]) ? row[1].Trim() : null;
+            var department = !string.IsNullOrWhiteSpace(row[2]) ? row[2].Trim() : null;
 
             var exists = await _db.Candidates.AnyAsync(c =>
                 c.ElectionId == electionId && c.FullName == fullName);
@@ -403,7 +441,8 @@ public class AdminElectionController : ControllerBase
             {
                 ElectionId = electionId,
                 FullName = fullName,
-                Batch = batch,
+                Session = session,
+                Department = department,
                 Office = office
             });
 

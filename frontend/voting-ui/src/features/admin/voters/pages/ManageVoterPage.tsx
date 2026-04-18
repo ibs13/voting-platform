@@ -13,14 +13,20 @@ import { getUserFriendlyErrorMessage } from "@/shared/utils/getUserFriendlyError
 
 type Voter = {
   id: string;
+  name: string;
   email: string;
+  session: string;
+  department: string;
   isEligible: boolean;
 };
 
 export const ManageVoterPage = () => {
   const { electionId } = useParams<{ electionId: string }>();
 
+  const [voterName, setVoterName] = useState("");
   const [voterEmail, setVoterEmail] = useState("");
+  const [voterSession, setVoterSession] = useState("");
+  const [voterDepartment, setVoterDepartment] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [voterFile, setVoterFile] = useState<File | null>(null);
@@ -80,11 +86,17 @@ export const ManageVoterPage = () => {
 
     try {
       await api.post(`/admin/elections/${electionId}/voters`, {
+        name: voterName,
         email: voterEmail,
+        session: voterSession,
+        department: voterDepartment,
       });
 
       setMessage("Voter added successfully.");
+      setVoterName("");
       setVoterEmail("");
+      setVoterSession("");
+      setVoterDepartment("");
       await loadVoters(electionId);
     } catch (err: unknown) {
       setError(getUserFriendlyErrorMessage(err, "addVoter"));
@@ -159,9 +171,24 @@ export const ManageVoterPage = () => {
 
   const voterColumns = [
     {
+      key: "name",
+      header: "Name",
+      render: (voter: Voter) => voter.name,
+    },
+    {
       key: "email",
       header: "Email",
       render: (voter: Voter) => voter.email,
+    },
+    {
+      key: "session",
+      header: "Session",
+      render: (voter: Voter) => voter.session,
+    },
+    {
+      key: "department",
+      header: "Department",
+      render: (voter: Voter) => voter.department,
     },
     {
       key: "isEligible",
@@ -203,11 +230,38 @@ export const ManageVoterPage = () => {
         <SectionCard title="Add Voter" className="space-y-4">
           <form onSubmit={handleAddVoter} className="grid gap-3">
             <FormInput
+              type="text"
+              label="Voter Name"
+              placeholder="Voter full name"
+              value={voterName}
+              onChange={(e) => setVoterName(e.target.value)}
+              required
+            />
+
+            <FormInput
               type="email"
               label="Voter Email"
               placeholder="Voter email"
               value={voterEmail}
               onChange={(e) => setVoterEmail(e.target.value)}
+              required
+            />
+
+            <FormInput
+              type="text"
+              label="Session"
+              placeholder="e.g. 2021-22"
+              value={voterSession}
+              onChange={(e) => setVoterSession(e.target.value)}
+              required
+            />
+
+            <FormInput
+              type="text"
+              label="Department"
+              placeholder="e.g. CSE"
+              value={voterDepartment}
+              onChange={(e) => setVoterDepartment(e.target.value)}
               required
             />
 

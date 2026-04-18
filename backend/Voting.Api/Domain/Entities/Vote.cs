@@ -9,5 +9,5 @@ public class Vote
     public Guid BallotSubmissionId { get; set; }
     public Office Office { get; set; }
     public Guid CandidateId { get; set; }
-    public DateTimeOffset CastAt { get; set; } = DateTimeOffset.UtcNow;
+    public DateTime CastAt { get; set; } = DateTime.UtcNow;
 }

@@ -21,10 +21,10 @@ public static class DbSeeder
         db.Elections.Add(election);
 
         db.Candidates.AddRange(
-            new Candidate { ElectionId = election.Id, FullName = "Candidate A", Batch = "2016", Office = Office.President },
-            new Candidate { ElectionId = election.Id, FullName = "Candidate B", Batch = "2017", Office = Office.Secretary },
-            new Candidate { ElectionId = election.Id, FullName = "Candidate C", Batch = "2018", Office = Office.Treasurer },
-            new Candidate { ElectionId = election.Id, FullName = "Candidate D", Batch = "2019", Office = Office.President }
+            new Candidate { ElectionId = election.Id, FullName = "Candidate A", Session = "2016", Office = Office.President },
+            new Candidate { ElectionId = election.Id, FullName = "Candidate B", Session = "2017", Office = Office.Secretary },
+            new Candidate { ElectionId = election.Id, FullName = "Candidate C", Session = "2018", Office = Office.Treasurer },
+            new Candidate { ElectionId = election.Id, FullName = "Candidate D", Session = "2019", Office = Office.President }
         );
 
         db.Voters.AddRange(

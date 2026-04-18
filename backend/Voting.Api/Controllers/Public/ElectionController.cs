@@ -70,7 +70,7 @@ public class ElectionsController : ControllerBase
         var candidates = await _db.Candidates.AsNoTracking()
             .Where(c => c.ElectionId == electionId)
             .OrderBy(c => c.FullName)
-            .Select(c => new CandidateResponse(c.Id, c.FullName, c.Batch, c.Office.ToString()))
+            .Select(c => new CandidateResponse(c.Id, c.FullName, c.Session, c.Office.ToString()))
             .ToListAsync();
 
         return Ok(new BallotResponse(

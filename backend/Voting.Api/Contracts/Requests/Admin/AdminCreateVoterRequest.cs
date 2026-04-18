@@ -1,5 +1,8 @@
 namespace Voting.Api.Contracts.Requests.Admin;
 
 public record AdminCreateVoterRequest(
-    string Email
+    string Name,
+    string Email,
+    string Session,
+    string Department
 );

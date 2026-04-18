@@ -15,7 +15,8 @@ import { getUserFriendlyErrorMessage } from "@/shared/utils/getUserFriendlyError
 type Candidate = {
   id: string;
   fullName: string;
-  batch: string | null;
+  session: string | null;
+  department: string | null;
   office: string;
 };
 
@@ -23,7 +24,8 @@ export const ManageCandidatePage = () => {
   const { electionId } = useParams<{ electionId: string }>();
 
   const [candidateName, setCandidateName] = useState("");
-  const [candidateBatch, setCandidateBatch] = useState("");
+  const [candidateSession, setCandidateSession] = useState("");
+  const [candidateDepartment, setCandidateDepartment] = useState("");
   const [candidateOffice, setCandidateOffice] = useState("President");
 
   const [message, setMessage] = useState<string | null>(null);
@@ -88,13 +90,15 @@ export const ManageCandidatePage = () => {
     try {
       await api.post(`/admin/elections/${electionId}/candidates`, {
         fullName: candidateName,
-        batch: candidateBatch.trim() || null,
+        session: candidateSession.trim() || null,
+        department: candidateDepartment.trim() || null,
         office: candidateOffice,
       });
 
       setMessage("Candidate added successfully.");
       setCandidateName("");
-      setCandidateBatch("");
+      setCandidateSession("");
+      setCandidateDepartment("");
       setCandidateOffice("President");
 
       await loadCandidates(electionId);
@@ -177,9 +181,14 @@ export const ManageCandidatePage = () => {
       render: (candidate: Candidate) => candidate.fullName,
     },
     {
-      key: "batch",
-      header: "Batch",
-      render: (candidate: Candidate) => candidate.batch || "-",
+      key: "session",
+      header: "Session",
+      render: (candidate: Candidate) => candidate.session || "-",
+    },
+    {
+      key: "department",
+      header: "Department",
+      render: (candidate: Candidate) => candidate.department || "-",
     },
     {
       key: "office",
@@ -231,10 +240,18 @@ export const ManageCandidatePage = () => {
 
             <FormInput
               type="text"
-              label="Batch"
-              placeholder="Batch (optional)"
-              value={candidateBatch}
-              onChange={(e) => setCandidateBatch(e.target.value)}
+              label="Session"
+              placeholder="Session"
+              value={candidateSession}
+              onChange={(e) => setCandidateSession(e.target.value)}
+            />
+
+            <FormInput
+              type="text"
+              label="Department"
+              placeholder="Department"
+              value={candidateDepartment}
+              onChange={(e) => setCandidateDepartment(e.target.value)}
             />
 
             <FormSelect

@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Voting.Api.Domain.Entities;
-using Voting.Api.Domain.Enums;
 
 namespace Voting.Api.Infrastructure.Data;
 
@@ -39,16 +38,35 @@ public class AppDbContext : DbContext
                 .IsRequired()
                 .HasMaxLength(150);
 
-            entity.Property(c => c.Office)
-                .IsRequired()
+            entity.Property(c => c.Session)
                 .HasMaxLength(50);
+
+            entity.Property(c => c.Department)
+                .HasMaxLength(100);
+
+            entity.Property(c => c.Office)
+                .HasConversion<string>()
+                .HasMaxLength(50)
+                .IsRequired();
         });
 
         modelBuilder.Entity<Voter>(entity =>
         {
+            entity.Property(v => v.Name)
+                .IsRequired()
+                .HasMaxLength(150);
+
             entity.Property(v => v.Email)
                 .IsRequired()
                 .HasMaxLength(256);
+
+            entity.Property(v => v.Session)
+                .IsRequired()
+                .HasMaxLength(50);
+
+            entity.Property(v => v.Department)
+                .IsRequired()
+                .HasMaxLength(100);
 
             entity.HasIndex(v => new { v.ElectionId, v.Email })
                 .IsUnique();

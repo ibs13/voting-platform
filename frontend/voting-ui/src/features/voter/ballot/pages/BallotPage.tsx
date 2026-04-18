@@ -11,7 +11,7 @@ import { PageShell } from "@/shared/ui/PageShell";
 type Candidate = {
   id: string;
   fullName: string;
-  batch?: string;
+  session?: string;
   office: string;
 };
 
@@ -139,7 +139,7 @@ export const BallotPage = () => {
               <option value="">Select candidate</option>
               {presidents.map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.fullName} {c.batch ? `(${c.batch})` : ""}
+                  {c.fullName} {c.session ? `(${c.session})` : ""}
                 </option>
               ))}
             </FormSelect>
@@ -158,7 +158,7 @@ export const BallotPage = () => {
               <option value="">Select candidate</option>
               {secretaries.map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.fullName} {c.batch ? `(${c.batch})` : ""}
+                  {c.fullName} {c.session ? `(${c.session})` : ""}
                 </option>
               ))}
             </FormSelect>
@@ -178,7 +178,7 @@ export const BallotPage = () => {
               <option value="">Select candidate</option>
               {treasurers.map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.fullName} {c.batch ? `(${c.batch})` : ""}
+                  {c.fullName} {c.session ? `(${c.session})` : ""}
                 </option>
               ))}
             </FormSelect>
