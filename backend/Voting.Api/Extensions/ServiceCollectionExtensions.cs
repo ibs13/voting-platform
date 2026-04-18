@@ -40,13 +40,27 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    public static IServiceCollection AddInfrastructureServices(this IServiceCollection services)
+    public static IServiceCollection AddInfrastructureServices(
+    this IServiceCollection services,
+    IConfiguration configuration)
     {
-        services.AddSingleton<IDevOtpSender, ConsoleDevOtpSender>();
-        services.AddScoped<CsvImportService>();
-        services.AddSingleton<JwtTokenService>();
+    services.Configure<EmailOptions>(configuration.GetSection("Email"));
 
-        return services;
+    var provider = configuration["Email:Provider"]?.ToLowerInvariant();
+
+    if (provider == "smtp")
+    {
+        services.AddScoped<IOtpEmailSender, SmtpOtpEmailSender>();
+    }
+    else
+    {
+        services.AddScoped<IOtpEmailSender, DevOtpEmailSender>();
+    }
+
+    services.AddScoped<JwtTokenService>();
+    services.AddScoped<CsvImportService>();
+
+    return services;
     }
 
     public static IServiceCollection AddJwtAuthentication(

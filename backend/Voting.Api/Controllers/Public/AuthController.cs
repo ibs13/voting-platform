@@ -14,13 +14,13 @@ namespace Voting.Api.Controllers.Public;
 public class AuthController : ControllerBase
 {
     private readonly AppDbContext _db;
-    private readonly IDevOtpSender _otpSender;
+    private readonly IOtpEmailSender _otpSender;
     private readonly JwtTokenService _jwt;
     private const int MaxOtpRequestsPer10Minutes = 5;
     private static readonly TimeSpan OtpRequestWindow = TimeSpan.FromMinutes(10);
     private static readonly TimeSpan OtpCooldown = TimeSpan.FromSeconds(30);
 
-    public AuthController(AppDbContext db, IDevOtpSender otpSender, JwtTokenService jwt)
+    public AuthController(AppDbContext db, IOtpEmailSender otpSender, JwtTokenService jwt)
     {
         _db = db;
         _otpSender = otpSender;
@@ -111,9 +111,16 @@ public class AuthController : ControllerBase
         _db.OtpChallenges.Add(challenge);
         await _db.SaveChangesAsync();
 
-        await _otpSender.SendAsync(email,otp);
+        try
+        {
+            await _otpSender.SendAsync(email, otp);
+        }
+        catch
+        {
+            return StatusCode(500, "Failed to send OTP email. Please try again.");
+        }
 
-        return Ok(new {message ="OTP sent (dev mode prints to console)"});
+        return Ok(new { message = "OTP sent successfully." });
 
     }
 

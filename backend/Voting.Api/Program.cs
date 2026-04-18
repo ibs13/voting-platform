@@ -9,7 +9,7 @@ if (builder.Environment.IsDevelopment())
 
 builder.Services.AddAppControllers();
 builder.Services.AddPersistence(builder.Configuration);
-builder.Services.AddInfrastructureServices();
+builder.Services.AddInfrastructureServices(builder.Configuration);
 builder.Services.AddJwtAuthentication(builder.Configuration);
 builder.Services.AddAppCors(builder.Configuration);
 

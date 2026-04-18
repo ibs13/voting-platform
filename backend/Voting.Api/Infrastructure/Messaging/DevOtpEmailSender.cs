@@ -1,6 +1,6 @@
 namespace Voting.Api.Infrastructure.Messaging;
 
-public class ConsoleDevOtpSender : IDevOtpSender
+public class DevOtpEmailSender : IOtpEmailSender
 {
     public Task SendAsync(string email, string otp)
     {
