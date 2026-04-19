@@ -1,0 +1,33 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: voting-postgres
+    environment:
+      POSTGRES_DB: voting_platform
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - voting-postgres-data:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: ./backend/Voting.Api
+      dockerfile: Dockerfile
+    container_name: voting-api
+    depends_on:
+      - postgres
+    ports:
+      - "5163:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__Default: Host=postgres;Port=5432;Database=voting_platform;Username=postgres;Password=postgres
+      Jwt__Key: 9Lf9mR2xQ8vLp3Nz6TaYw4Bd1HsUj5Ce8MvRq2Xp9Ld7Ak&F
+      Jwt__Issuer: Voting.Api
+      Jwt__Audience: Voting.Frontend
+      Cors__AllowedOrigins__0: http://localhost:5173
+      Email__Provider: Dev
+
+volumes:
+  voting-postgres-data:
