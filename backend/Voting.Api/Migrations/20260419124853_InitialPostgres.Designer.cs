@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Voting.Api.Infrastructure.Data;
 
 #nullable disable
@@ -11,31 +12,36 @@ using Voting.Api.Infrastructure.Data;
 namespace Voting.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260222130725_AddAdminUsers")]
-    partial class AddAdminUsers
+    [Migration("20260419124853_InitialPostgres")]
+    partial class InitialPostgres
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.2");
+            modelBuilder
+                .HasAnnotation("ProductVersion", "10.0.4")
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            modelBuilder.Entity("Voting.Api.Domain.AdminUser", b =>
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("Voting.Api.Domain.Entities.AdminUser", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
-                    b.Property<DateTimeOffset>("CreateAt")
-                        .HasColumnType("TEXT");
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("Username")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.HasKey("Id");
 
@@ -45,44 +51,49 @@ namespace Voting.Api.Migrations
                     b.ToTable("AdminUsers");
                 });
 
-            modelBuilder.Entity("Voting.Api.Domain.BallotSubmission", b =>
+            modelBuilder.Entity("Voting.Api.Domain.Entities.BallotSubmission", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
-                    b.Property<DateTimeOffset>("CastAt")
-                        .HasColumnType("TEXT");
+                    b.Property<DateTime>("CastAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("ElectionId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
                     b.ToTable("BallotSubmissions");
                 });
 
-            modelBuilder.Entity("Voting.Api.Domain.Candidate", b =>
+            modelBuilder.Entity("Voting.Api.Domain.Entities.Candidate", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Batch")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Department")
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<Guid>("ElectionId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("FullName")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
 
-                    b.Property<string>("Roll")
-                        .HasColumnType("TEXT");
+                    b.Property<string>("Office")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Session")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.HasKey("Id");
 
@@ -91,85 +102,89 @@ namespace Voting.Api.Migrations
                     b.ToTable("Candidates");
                 });
 
-            modelBuilder.Entity("Voting.Api.Domain.Election", b =>
+            modelBuilder.Entity("Voting.Api.Domain.Entities.Election", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
-                    b.Property<DateTimeOffset>("EndAt")
-                        .HasColumnType("TEXT");
+                    b.Property<DateTime>("EndAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
 
-                    b.Property<DateTimeOffset>("StartAt")
-                        .HasColumnType("TEXT");
+                    b.Property<DateTime>("StartAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
 
                     b.HasKey("Id");
 
                     b.ToTable("Elections");
                 });
 
-            modelBuilder.Entity("Voting.Api.Domain.OtpChallenge", b =>
+            modelBuilder.Entity("Voting.Api.Domain.Entities.OtpChallenge", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<int>("Attempts")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("ElectionId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
 
                     b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("OtpHash")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<DateTime?>("UsedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
                     b.ToTable("OtpChallenges");
                 });
 
-            modelBuilder.Entity("Voting.Api.Domain.Vote", b =>
+            modelBuilder.Entity("Voting.Api.Domain.Entities.Vote", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("BallotSubmissionId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("CandidateId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
-                    b.Property<DateTimeOffset>("CastAt")
-                        .HasColumnType("TEXT");
+                    b.Property<DateTime>("CastAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("ElectionId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<int>("Office")
-                        .HasColumnType("INTEGER");
+                        .HasMaxLength(50)
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -182,20 +197,20 @@ namespace Voting.Api.Migrations
                     b.ToTable("Votes");
                 });
 
-            modelBuilder.Entity("Voting.Api.Domain.VoteLock", b =>
+            modelBuilder.Entity("Voting.Api.Domain.Entities.VoteLock", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("ElectionId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
-                    b.Property<DateTimeOffset>("LockedAt")
-                        .HasColumnType("TEXT");
+                    b.Property<DateTime>("LockedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("VoterId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -205,33 +220,37 @@ namespace Voting.Api.Migrations
                     b.ToTable("VoteLocks");
                 });
 
-            modelBuilder.Entity("Voting.Api.Domain.Voter", b =>
+            modelBuilder.Entity("Voting.Api.Domain.Entities.Voter", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Batch")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Department")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<Guid>("ElectionId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
 
                     b.Property<bool>("IsEligible")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
-                    b.Property<string>("Roll")
+                    b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<string>("Session")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.HasKey("Id");
 
@@ -241,9 +260,9 @@ namespace Voting.Api.Migrations
                     b.ToTable("Voters");
                 });
 
-            modelBuilder.Entity("Voting.Api.Domain.Candidate", b =>
+            modelBuilder.Entity("Voting.Api.Domain.Entities.Candidate", b =>
                 {
-                    b.HasOne("Voting.Api.Domain.Election", "Election")
+                    b.HasOne("Voting.Api.Domain.Entities.Election", "Election")
                         .WithMany("Candidates")
                         .HasForeignKey("ElectionId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -252,9 +271,9 @@ namespace Voting.Api.Migrations
                     b.Navigation("Election");
                 });
 
-            modelBuilder.Entity("Voting.Api.Domain.Voter", b =>
+            modelBuilder.Entity("Voting.Api.Domain.Entities.Voter", b =>
                 {
-                    b.HasOne("Voting.Api.Domain.Election", "Election")
+                    b.HasOne("Voting.Api.Domain.Entities.Election", "Election")
                         .WithMany("Voters")
                         .HasForeignKey("ElectionId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -263,7 +282,7 @@ namespace Voting.Api.Migrations
                     b.Navigation("Election");
                 });
 
-            modelBuilder.Entity("Voting.Api.Domain.Election", b =>
+            modelBuilder.Entity("Voting.Api.Domain.Entities.Election", b =>
                 {
                     b.Navigation("Candidates");
 
