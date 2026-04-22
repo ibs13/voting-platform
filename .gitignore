@@ -46,3 +46,4 @@ lerna-debug.log*
 **/appsettings.Development.json
 .env
 .env.local
+!.env.example
