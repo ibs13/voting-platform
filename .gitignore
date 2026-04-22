@@ -44,3 +44,5 @@ lerna-debug.log*
 # App secrets / local config
 # ---------------------------
 **/appsettings.Development.json
+.env
+.env.local

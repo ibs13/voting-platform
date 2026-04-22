@@ -23,11 +23,18 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__Default: Host=postgres;Port=5432;Database=voting_platform;Username=postgres;Password=postgres
-      Jwt__Key: 9Lf9mR2xQ8vLp3Nz6TaYw4Bd1HsUj5Ce8MvRq2Xp9Ld7Ak&F
+      Jwt__Key: ${JWT_Secret}
       Jwt__Issuer: Voting.Api
       Jwt__Audience: Voting.Frontend
       Cors__AllowedOrigins__0: http://localhost:5173
-      Email__Provider: Dev
+      Email__Provider: Smtp
+      Email__SmtpHost: smtp.gmail.com
+      Email__SmtpPort: 587
+      Email__SmtpUsername: ${SMTP_USERNAME}
+      Email__SmtpPassword: ${SMTP_PASSWORD}
+      Email__SenderEmail: ${SMTP_SENDER_EMAIL}
+      Email__SenderName: Voting Platform
+      Email__SmtpUseStartTls: true
 
 volumes:
   voting-postgres-data:
