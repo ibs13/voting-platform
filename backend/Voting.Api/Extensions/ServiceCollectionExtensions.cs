@@ -44,23 +44,32 @@ public static class ServiceCollectionExtensions
     this IServiceCollection services,
     IConfiguration configuration)
     {
-    services.Configure<EmailOptions>(configuration.GetSection("Email"));
+        services.Configure<EmailOptions>(configuration.GetSection("Email"));
 
-    var provider = configuration["Email:Provider"]?.ToLowerInvariant();
+        var provider = configuration["Email:Provider"]?.ToLowerInvariant();
 
-    if (provider == "smtp")
-    {
-        services.AddScoped<IOtpEmailSender, SmtpOtpEmailSender>();
-    }
-    else
-    {
-        services.AddScoped<IOtpEmailSender, DevOtpEmailSender>();
-    }
+        if (provider == "smtp")
+        {
+            services.AddScoped<IOtpEmailSender, SmtpOtpEmailSender>();
+        }
+        else if (provider == "brevo")
+        {
+            services.Configure<BrevoOptions>(configuration.GetSection(BrevoOptions.SectionName));
 
-    services.AddScoped<JwtTokenService>();
-    services.AddScoped<CsvImportService>();
+            services.AddHttpClient<IOtpEmailSender, BrevoOtpEmailSender>(client =>
+            {
+                client.Timeout = TimeSpan.FromSeconds(15);
+            });
+        }
+        else
+        {
+            services.AddScoped<IOtpEmailSender, DevOtpEmailSender>();
+        }
 
-    return services;
+        services.AddScoped<JwtTokenService>();
+        services.AddScoped<CsvImportService>();
+
+        return services;
     }
 
     public static IServiceCollection AddJwtAuthentication(
