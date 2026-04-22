@@ -39,17 +39,20 @@ public class SmtpOtpEmailSender : IOtpEmailSender
         message.Body = bodyBuilder.ToMessageBody();
 
         using var client = new SmtpClient();
+        client.Timeout = 15000;
 
-        var socketOption = _options.SmtpUseStartTls
+        var socketOptions = _options.SmtpUseStartTls
             ? SecureSocketOptions.StartTls
-            : SecureSocketOptions.Auto;
+            : SecureSocketOptions.SslOnConnect;
 
         try
         {
+            Console.WriteLine($"SMTP CONNECT: Host={_options.SmtpHost}, Port={_options.SmtpPort}, Security={socketOptions}, User={_options.SmtpUsername}");
+
             await client.ConnectAsync(
                 _options.SmtpHost,
                 _options.SmtpPort,
-                _options.SmtpUseStartTls ? SecureSocketOptions.StartTls : SecureSocketOptions.Auto);
+                socketOptions);
 
             if (!string.IsNullOrWhiteSpace(_options.SmtpUsername))
             {
