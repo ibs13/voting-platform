@@ -1,0 +1,34 @@
+name: Backend CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  backend-ci:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend/Voting.Api
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore backend dependencies
+        run: dotnet restore
+
+      - name: Build backend
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Publish backend
+        run: dotnet publish --no-build --configuration Release -o ./publish /p:UseAppHost=false
+
+      - name: Build Docker image
+        run: docker build -t voting-api .
