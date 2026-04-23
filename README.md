@@ -283,8 +283,6 @@ Later, you can make this README even stronger by adding:
 
 ---
 
----
-
 ## License
 
 MIT
