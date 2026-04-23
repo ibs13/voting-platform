@@ -1,114 +1,168 @@
 # Voting Platform
 
-A full-stack, role-based election voting platform with OTP-based voter authentication, turnout tracking, and results visibility after election close. Built with ASP.NET Core and React.
+A full-stack election platform with separate admin and voter flows, OTP-based voter login, CSV import for election data, turnout tracking, and results publishing after an election is closed.
+
+Built with ASP.NET Core Web API on the backend and React + TypeScript on the frontend.
 
 ---
 
 ## Features
 
-**Admin**
+### Admin
 
-- Create and manage elections with configurable start and end times
-- Add office-specific candidates and voters individually or via CSV bulk upload
-- View and manage candidate and voter lists
-- View voter turnout while an election is open
-- Close elections and publish results
+- Create and manage elections
+- Add candidates and voters manually or through CSV upload
+- View candidate and voter lists
+- Track turnout during an active election
+- Open and close elections
+- Publish results after election close
 
-**Voter**
+### Voter
 
-- Authenticate via email OTP, no password required
-- Cast a ballot with one vote per office from office-specific candidate lists
-- View results only after the election is officially closed
-- Double-vote prevention enforced at the server level via `VoteLock`
+- Sign in with email OTP
+- Access the ballot for the active election
+- Vote once per office
+- View results only after the election has been closed
 
 ---
 
-## Voting Rules
+## Core Rules
 
-- Each candidate can participate in only one office
-- A President candidate cannot run for Secretary or Treasurer
-- A Secretary candidate cannot run for President or Treasurer
-- A Treasurer candidate cannot run for President or Secretary
-- Voters select one candidate per office
-- Results remain hidden until the election is closed
+- Each voter can submit only one ballot for an election
+- A voter can vote once per office
+- Results stay hidden until the election is closed
+- Server-side checks prevent duplicate voting
 
 ---
 
 ## Tech Stack
 
-| Layer          | Technology                             |
-| -------------- | -------------------------------------- |
-| Backend API    | ASP.NET Core Web API (.NET 10), C#     |
-| Authentication | JWT Bearer tokens + OTP challenge flow |
-| Database       | SQLite via Entity Framework Core       |
-| Frontend       | React 18, TypeScript, Vite             |
-| HTTP Client    | Axios                                  |
-| Styling        | Tailwind CSS                           |
+### Backend
+
+- ASP.NET Core Web API (.NET 10)
+- Entity Framework Core
+- PostgreSQL in deployment
+- JWT authentication
+- SMTP email delivery for OTP
+
+### Frontend
+
+- React 19
+- TypeScript
+- Vite
+- React Router
+- Axios
+- Tailwind CSS
+
+### DevOps
+
+- Docker Compose
+- GitHub Actions
 
 ---
 
-## Architecture
+## Project Structure
 
 ```text
 voting-platform/
+├── .github/workflows/        # CI workflows
 ├── backend/
-│   └── Voting.Api/
-│       ├── Controllers/        # AdminAuth, AdminElections, Auth, Election,
-│       │                       # Me, Results, Voter, Dev
-│       ├── Domain/             # Entities: Election, Candidate, Voter,
-│       │                       # Vote, VoteLock, OtpChallenge, BallotSubmission
-│       ├── Dtos/               # Request and response models
-│       ├── Data/               # AppDbContext, DbSeeder
-│       ├── Services/           # JwtTokenService, CsvImportService, IDevOtpSender
-│       ├── Migrations/
-│       └── Program.cs
-└── frontend/
-    └── voting-ui/
-        └── src/
-            ├── api/            # Axios instance
-            ├── components/     # ProtectedRoute, RoleRoute, LogoutButton
-            ├── context/        # AuthContext
-            ├── layouts/        # ProtectedLayout
-            └── pages/          # AdminDashboard, AdminLogin, Ballot,
-                                # Email, Otp, Results, Success
+│   ├── Voting.Api/
+│   │   ├── Common/           # Shared helpers and constants
+│   │   ├── Contracts/        # Request/response models
+│   │   ├── Controllers/      # API endpoints
+│   │   ├── Domain/           # Core entities and enums
+│   │   ├── Extensions/       # Service registration/config helpers
+│   │   ├── Infrastructure/   # DbContext, services, persistence concerns
+│   │   ├── Migrations/
+│   │   ├── Program.cs
+│   │   └── Voting.Api.csproj
+│   └── VotingPlatform.slnx
+├── frontend/
+│   └── voting-ui/
+│       ├── src/
+│       │   ├── api/
+│       │   ├── components/
+│       │   ├── contexts/
+│       │   ├── layouts/
+│       │   ├── pages/
+│       │   ├── routes/
+│       │   └── utils/
+│       └── package.json
+├── .env.example
+├── docker-compose.yml
+└── README.md
 ```
-
-### Key Design Decisions
-
-- **VoteLock**: A separate entity that prevents double voting independently of the ballot submission record, making the rule explicit and auditable.
-- **OtpChallenge**: Stored as its own entity with expiry support, allowing stateless API servers without session state.
-- **Role separation at routing level**: Admin and voter flows are separated clearly instead of mixing role checks in a single controller or route.
-- **Office-specific candidacy**: Each candidate belongs to exactly one office, and both ballot rendering and vote submission validation enforce this rule.
-- **Fail-fast JWT validation**: `Program.cs` throws an `InvalidOperationException` on startup if `Jwt:Key` is missing, preventing silent misconfiguration.
 
 ---
 
-## Local Setup
+## How It Works
+
+### Admin flow
+
+1. Admin signs in
+2. Admin creates an election
+3. Admin adds candidates and voters
+4. Admin opens the election
+5. Admin monitors turnout
+6. Admin closes the election
+7. Results become visible
+
+### Voter flow
+
+1. Voter enters email
+2. System sends OTP
+3. Voter verifies OTP
+4. Voter accesses ballot
+5. Voter submits votes
+6. Voter can view results after the election closes
+
+---
+
+## Local Development
 
 ### Prerequisites
 
 - .NET 10 SDK
 - Node.js 20+
+- PostgreSQL if you want to run with the current deployment-style database setup
 
-### Backend
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/ibs13/voting-platform.git
+cd voting-platform
+```
+
+### 2. Backend setup
 
 ```bash
 cd backend/Voting.Api
+```
 
-# Set the JWT signing key via user secrets
-dotnet user-secrets init
-dotnet user-secrets set "Jwt:Key" "your-local-development-secret-min-32-chars"
+Set your local secrets or environment variables for backend configuration.
 
-# Apply migrations
+Minimum required values:
+
+- `ConnectionStrings__Default`
+- `Jwt__Key`
+- `Cors__AllowedOrigins__0`
+
+Example local run:
+
+```bash
+dotnet restore
 dotnet ef database update
-
-# Run the API
 dotnet run
 ```
 
-In development, OpenAPI docs are available at `/openapi`.
+The API runs on the backend port configured by ASP.NET Core. In development, OpenAPI is available at:
 
-### Frontend
+```text
+/openapi
+```
+
+### 3. Frontend setup
 
 ```bash
 cd frontend/voting-ui
@@ -116,157 +170,118 @@ npm install
 npm run dev
 ```
 
-The frontend runs on the Vite development server.
+---
 
-### Default Admin Credentials
+## Environment Variables
 
-The database seeder creates a default admin account for local development:
+The project includes a root `.env.example` file for production-style configuration.
 
-| Field    | Value      |
-| -------- | ---------- |
-| Username | `admin`    |
-| Password | `admin123` |
+### Backend
 
-Change or remove these credentials before using the project in any shared or deployed environment.
+- `ASPNETCORE_ENVIRONMENT`
+- `ASPNETCORE_URLS`
+- `ConnectionStrings__Default`
+- `Jwt__Key`
+- `Jwt__Issuer`
+- `Jwt__Audience`
+- `Jwt__VoterTokenMinutes`
+- `Jwt__AdminTokenHours`
+- `Cors__AllowedOrigins__0`
+- `Otp__ExpiryMinutes`
+- `Otp__MaxAttempts`
+- `Election__TimeZone`
+- `Seed__RunOnStartup`
+- `Email__Provider`
+- `Email__SmtpHost`
+- `Email__SmtpPort`
+- `Email__SmtpUsername`
+- `Email__SmtpPassword`
+- `Email__SenderEmail`
+- `Email__SenderName`
+- `Email__SmtpUseStartTls`
+
+Do not commit real secrets.
 
 ---
 
-## Configuration
+## Docker Compose
 
-`appsettings.json` contains non-secret configuration only:
+A `docker-compose.yml` file is included for local infrastructure and API startup.
 
-```json
-{
-  "ConnectionStrings": {
-    "Default": "Data Source=voting.db"
-  },
-  "Jwt": {
-    "Key": ""
-  }
-}
+It currently defines:
+
+- PostgreSQL
+- ASP.NET Core API service
+
+Typical use:
+
+```bash
+docker compose up --build
 ```
 
-The `Jwt:Key` value must be supplied through .NET user secrets for local development or through environment variables or secret management in other environments. The application will not start if the key is missing or empty.
+---
+
+## CSV Import
+
+The platform supports CSV upload for candidates and voters from the admin side.
+
+Because import columns can change as the data model evolves, treat the backend validation and current API contract as the source of truth.
+
+Suggested practice:
+
+- keep sample CSV files in the repo later if you want easier onboarding
+- document the exact headers beside the upload UI or in a dedicated `docs/` folder
 
 ---
 
-## Time Handling
+## API Reference
 
-Election scheduling is based on Bangladesh local time (`Asia/Dhaka`).
-
-When an admin enters `StartAt` and `EndAt` from the UI, the backend treats those values as Bangladesh local time for election window validation. Time comparisons are performed consistently to avoid timezone mismatch issues between local development and production environments.
-
-Recommendation:
-
-- keep server-side election checks consistent
-- treat admin-entered election times as Bangladesh time
-- use UTC carefully in validation and logging where needed
-
----
-
-## API Overview
-
-> Update this section if your route attributes change. The routes below should match your current controller setup.
-
-| Method   | Route                                     | Role        | Description                       |
-| -------- | ----------------------------------------- | ----------- | --------------------------------- |
-| `POST`   | `/admin/auth/login`                       | Public      | Admin login, returns JWT          |
-| `GET`    | `/admin/elections`                        | Admin       | List all elections                |
-| `POST`   | `/admin/elections`                        | Admin       | Create election                   |
-| `POST`   | `/admin/elections/{id}/candidates`        | Admin       | Add candidate                     |
-| `GET`    | `/admin/elections/{id}/candidates`        | Admin       | List candidates                   |
-| `DELETE` | `/admin/elections/candidates/{id}`        | Admin       | Delete candidate                  |
-| `POST`   | `/admin/elections/{id}/candidates/upload` | Admin       | Bulk import candidates            |
-| `POST`   | `/admin/elections/{id}/voters`            | Admin       | Add voter                         |
-| `GET`    | `/admin/elections/{id}/voters`            | Admin       | List voters                       |
-| `DELETE` | `/admin/elections/voters/{id}`            | Admin       | Delete voter                      |
-| `POST`   | `/admin/elections/{id}/voters/upload`     | Admin       | Bulk import voters                |
-| `POST`   | `/admin/elections/{id}/open`              | Admin       | Open election                     |
-| `POST`   | `/admin/elections/{id}/close`             | Admin       | Close election                    |
-| `GET`    | `/admin/elections/{id}/turnout`           | Admin       | View turnout stats                |
-| `POST`   | `/auth/request-otp`                       | Public      | Request OTP for voter email       |
-| `POST`   | `/auth/verify-otp`                        | Public      | Verify OTP and return voter JWT   |
-| `GET`    | `/election/{id}/ballot`                   | Voter       | Get ballot for an open election   |
-| `POST`   | `/voter/vote`                             | Voter       | Submit ballot                     |
-| `GET`    | `/results/{id}`                           | Voter/Admin | View results after election close |
-
----
-
-## Candidate CSV Format
-
-Candidate CSV upload requires the following columns:
-
-```csv
-fullName,batch,office
-John Doe,15,President
-Jane Smith,16,Secretary
-Rahim Uddin,14,Treasurer
-```
-
-Valid office values must match the backend office enum used by the application.
-
----
-
-## OTP Voter Flow
+This project exposes OpenAPI documentation in development. Instead of maintaining a long manual route table in the README, use the generated API spec as the source of truth:
 
 ```text
-Voter enters email
-       │
-       ▼
-POST /auth/request-otp
-→ OtpChallenge created in DB
-→ OTP printed to console in development
-       │
-       ▼
-POST /auth/verify-otp
-→ Challenge validated
-→ Voter JWT returned
-       │
-       ▼
-GET /election/{id}/ballot
-→ Returns only office-eligible candidates for President, Secretary, and Treasurer
-       │
-       ▼
-POST /voter/vote
-→ VoteLock checked
-→ Candidate office eligibility validated
-→ BallotSubmission + Vote records created
-→ VoteLock created
+/openapi
 ```
 
----
-
-## Current Status
-
-This project is currently a working MVP and supports the full election lifecycle:
-
-- admin election creation
-- office-based candidate and voter management
-- OTP-based voter login
-- ballot submission
-- double-vote prevention
-- turnout tracking
-- close-and-publish results flow
-
-### Current Known Improvements
-
-- Some forms still use browser-native validation and need custom inline validation messages
-- Loading and disabled states for async actions are only partially implemented
-- Results page redirect behavior for missing election IDs can be improved
-- OTP delivery is still console-based in development
-- Docker setup is not added yet
+That keeps the documentation aligned with the code when endpoints change.
 
 ---
 
-## Roadmap
+## Deployment Notes
 
-- Replace console OTP sender with real email delivery
-- Add Docker / docker-compose for easier local setup
-- Add CI pipeline for build and test
-- Improve inline form validation and error handling
-- Add voter status page
-- Add soft delete and audit logs
-- Prepare deployment setup
+This project is structured for containerized deployment.
+
+Before deploying, verify these items:
+
+- production database connection string is set
+- JWT secret is set
+- CORS is set to the real frontend domain
+- SMTP settings are configured for OTP delivery
+- seed behavior is disabled unless you explicitly want it
+
+---
+
+## Current Focus of the Codebase
+
+This repository is organized around:
+
+- clearer backend layering
+- cleaner request and response contracts
+- role-based separation between admin and voter flows
+- environment-based configuration for production deployment
+
+---
+
+## Recommended Next README Improvements
+
+Later, you can make this README even stronger by adding:
+
+- screenshots or GIFs of admin and voter flows
+- sample CSV files in a `docs/` or `samples/` folder
+- a short architecture diagram
+- deployment steps for Railway
+- Postman collection link or export
+
+---
 
 ---
 
