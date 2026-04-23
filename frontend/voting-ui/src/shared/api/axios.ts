@@ -1,7 +1,7 @@
 import axios from "axios";
 
 export const api = axios.create({
-  baseURL: "http://localhost:5163", // backend post
+  baseURL: import.meta.env.VITE_API_BASE_URL,
 });
 
 export function setAuthToken(token: string | null) {
