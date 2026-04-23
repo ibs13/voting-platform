@@ -6,6 +6,15 @@ Built with ASP.NET Core Web API on the backend and React + TypeScript on the fro
 
 ---
 
+## Live Demo
+
+- Frontend App: [Open App](https://votingplatform2026.netlify.app/)
+- Backend API: [Railway Backend](https://voting-platform-production.up.railway.app/)
+
+> Note: OpenAPI is available in development only and is not exposed publicly in production..
+
+---
+
 ## Features
 
 ### Admin
