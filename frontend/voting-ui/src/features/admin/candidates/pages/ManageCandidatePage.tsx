@@ -1,234 +1,25 @@
-import { useEffect, useState, useCallback } from "react";
-import { api } from "@/shared/api/axios";
 import { useParams } from "react-router-dom";
-import { Alert } from "@/shared/ui/Alert";
-import { FormInput } from "@/shared/ui/FormInput";
-import { FormSelect } from "@/shared/ui/FormSelect";
-import { FormFileInput } from "@/shared/ui/FormFileInput";
-import { Button } from "@/shared/ui/Button";
 import { BackButton } from "@/shared/ui/BackButton";
 import { PageCard } from "@/shared/ui/PageCard";
-import { SectionCard } from "@/shared/ui/SectionCard";
-import { DataTable } from "@/shared/ui/DataTable";
-import { ConfirmDialog } from "@/shared/ui/ConfirmDialog";
-import { getUserFriendlyErrorMessage } from "@/shared/utils/getUserFriendlyErrorMessage";
-import { Pagination } from "@/shared/ui/Pagination";
-import { usePagination } from "@/shared/hooks/usePagination";
-
-type Candidate = {
-  id: string;
-  fullName: string;
-  session: string | null;
-  department: string | null;
-  office: string;
-};
+import { PageFeedback } from "@/shared/ui/PageFeedback";
+import { AddCandidateForm } from "@/features/admin/candidates/Components/AddCandidateForm";
+import { CandidateTable } from "@/features/admin/candidates/Components/CandidateTable";
+import { DeleteCandidateDialog } from "@/features/admin/candidates/Components/DeleteCandidateDialog";
+import { UploadCandidatesCsvForm } from "@/features/admin/candidates/Components/UploadCandidatesCsvForm";
+import { useManageCandidates } from "@/features/admin/candidates/hooks/useManageCandidates";
 
 export const ManageCandidatePage = () => {
   const { electionId } = useParams<{ electionId: string }>();
 
-  const [candidateName, setCandidateName] = useState("");
-  const [candidateSession, setCandidateSession] = useState("");
-  const [candidateDepartment, setCandidateDepartment] = useState("");
-  const [candidateOffice, setCandidateOffice] = useState("President");
+  const { form, csvUpload, feedback, table, deleteDialog } =
+    useManageCandidates(electionId);
 
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [candidateFile, setCandidateFile] = useState<File | null>(null);
-
-  const [candidates, setCandidates] = useState<Candidate[]>([]);
-  const [loadingCandidates, setLoadingCandidates] = useState(false);
-
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(
-    null,
-  );
-
-  const {
-    currentPage,
-    setCurrentPage,
-    paginatedItems: paginatedCandidates,
-    resetPage,
-    pageSize,
-  } = usePagination(candidates, 10);
-
-  const clearFeedback = () => {
-    setMessage(null);
-    setError(null);
-  };
-
-  const loadCandidates = async (selectedElectionId: string) => {
-    if (!selectedElectionId) {
-      setCandidates([]);
-      return;
-    }
-
-    try {
-      setLoadingCandidates(true);
-      const res = await api.get(
-        `/admin/elections/${selectedElectionId}/candidates`,
-      );
-      setCandidates(res.data as Candidate[]);
-      resetPage();
-    } catch (err: unknown) {
-      setError(getUserFriendlyErrorMessage(err, "loadCandidates"));
-      setCandidates([]);
-    } finally {
-      setLoadingCandidates(false);
-    }
-  };
-
-  const loadLists = useCallback(async (selectedElectionId: string) => {
-    await Promise.all([loadCandidates(selectedElectionId)]);
-  }, []);
-
-  useEffect(() => {
-    if (!electionId) {
-      setCandidates([]);
-      return;
-    }
-
-    loadLists(electionId);
-  }, [electionId, loadLists]);
-
-  const handleAddCandidate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    clearFeedback();
-
-    if (!electionId) {
-      setError("Please select an election first.");
-      return;
-    }
-
-    try {
-      await api.post(`/admin/elections/${electionId}/candidates`, {
-        fullName: candidateName,
-        session: candidateSession.trim() || null,
-        department: candidateDepartment.trim() || null,
-        office: candidateOffice,
-      });
-
-      setMessage("Candidate added successfully.");
-      setCandidateName("");
-      setCandidateSession("");
-      setCandidateDepartment("");
-      setCandidateOffice("President");
-
-      await loadCandidates(electionId);
-    } catch (err: unknown) {
-      setError(getUserFriendlyErrorMessage(err, "addCandidate"));
-    }
-  };
-
-  const handleUploadCandidatesCsv = async (e: React.FormEvent) => {
-    e.preventDefault();
-    clearFeedback();
-
-    if (!electionId) {
-      setError("Please select an election first.");
-      return;
-    }
-
-    if (!candidateFile) {
-      setError("Please choose a candidate CSV file.");
-      return;
-    }
-
-    try {
-      const formData = new FormData();
-      formData.append("file", candidateFile);
-
-      const res = await api.post(
-        `/admin/elections/${electionId}/candidates/upload`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        },
-      );
-
-      setMessage(
-        `${res.data.message} Imported: ${res.data.imported}, Skipped: ${res.data.skipped}`,
-      );
-      setCandidateFile(null);
-
-      await loadCandidates(electionId);
-    } catch (err: unknown) {
-      setError(getUserFriendlyErrorMessage(err, "uploadCandidates"));
-    }
-  };
-
-  const askDeleteCandidate = (candidateId: string) => {
-    setSelectedCandidateId(candidateId);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const handleConfirmDeleteCandidate = async () => {
-    if (!selectedCandidateId) return;
-
-    clearFeedback();
-
-    try {
-      const res = await api.delete(
-        `/admin/elections/candidates/${selectedCandidateId}`,
-      );
-      setMessage(res.data?.message ?? "Candidate deleted successfully.");
-      setIsDeleteDialogOpen(false);
-      setSelectedCandidateId(null);
-      await loadCandidates(electionId!);
-    } catch (err: unknown) {
-      setError(getUserFriendlyErrorMessage(err, "deleteCandidate"));
-    }
-  };
-
-  const handleCancelDeleteCandidate = () => {
-    setIsDeleteDialogOpen(false);
-    setSelectedCandidateId(null);
-  };
-
-  const candidateColumns = [
-    {
-      key: "fullName",
-      header: "Full Name",
-      render: (candidate: Candidate) => candidate.fullName,
-    },
-    {
-      key: "session",
-      header: "Session",
-      render: (candidate: Candidate) => candidate.session || "-",
-    },
-    {
-      key: "department",
-      header: "Department",
-      render: (candidate: Candidate) => candidate.department || "-",
-    },
-    {
-      key: "office",
-      header: "Office",
-      render: (candidate: Candidate) => candidate.office,
-    },
-    {
-      key: "actions",
-      header: "Actions",
-      render: (candidate: Candidate) => (
-        <Button
-          type="button"
-          variant="danger"
-          className="px-3 py-1 text-sm"
-          onClick={() => askDeleteCandidate(candidate.id)}
-        >
-          Delete
-        </Button>
-      ),
-    },
-  ];
-
-  if (error === "This election could not be found.") {
+  if (feedback.error === "This election could not be found.") {
     return (
       <PageCard title="Manage Candidates" className="max-w-5xl">
-        <Alert type="error">
-          Election not found. Please select a valid election.
-        </Alert>
+        <BackButton to="/admin/dashboard" label="Back to Dashboard" />
+
+        <PageFeedback error="Election not found. Please select a valid election." />
       </PageCard>
     );
   }
@@ -237,95 +28,41 @@ export const ManageCandidatePage = () => {
     <>
       <PageCard title="Manage Candidates" className="max-w-5xl space-y-8">
         <BackButton to="/admin/dashboard" label="Back to Dashboard" />
-        {message && <Alert type="success">{message}</Alert>}
-        {error && <Alert type="error">{error}</Alert>}
 
-        <SectionCard title="Add Candidate" className="space-y-4">
-          <form onSubmit={handleAddCandidate} className="grid gap-3">
-            <FormInput
-              type="text"
-              label="Candidate Full Name"
-              placeholder="Candidate full name"
-              value={candidateName}
-              onChange={(e) => setCandidateName(e.target.value)}
-              required
-            />
+        <PageFeedback message={feedback.message} error={feedback.error} />
 
-            <FormInput
-              type="text"
-              label="Session"
-              placeholder="Session"
-              value={candidateSession}
-              onChange={(e) => setCandidateSession(e.target.value)}
-            />
+        <AddCandidateForm
+          fullName={form.candidateName}
+          session={form.candidateSession}
+          department={form.candidateDepartment}
+          office={form.candidateOffice}
+          onFullNameChange={form.setCandidateName}
+          onSessionChange={form.setCandidateSession}
+          onDepartmentChange={form.setCandidateDepartment}
+          onOfficeChange={form.setCandidateOffice}
+          onSubmit={form.createCandidate}
+        />
 
-            <FormInput
-              type="text"
-              label="Department"
-              placeholder="Department"
-              value={candidateDepartment}
-              onChange={(e) => setCandidateDepartment(e.target.value)}
-            />
+        <UploadCandidatesCsvForm
+          onFileChange={csvUpload.setCandidateFile}
+          onSubmit={csvUpload.uploadCandidatesCsv}
+        />
 
-            <FormSelect
-              label="Office"
-              value={candidateOffice}
-              onChange={(e) => setCandidateOffice(e.target.value)}
-              required
-            >
-              <option value="President">President</option>
-              <option value="Secretary">Secretary</option>
-              <option value="Treasurer">Treasurer</option>
-            </FormSelect>
-
-            <Button type="submit" variant="success" className="w-fit">
-              Add Candidate
-            </Button>
-          </form>
-        </SectionCard>
-
-        <SectionCard title="Upload Candidates CSV" className="space-y-4">
-          <form onSubmit={handleUploadCandidatesCsv} className="grid gap-3">
-            <FormFileInput
-              label="Candidate CSV File"
-              accept=".csv"
-              onChange={(e) => setCandidateFile(e.target.files?.[0] || null)}
-            />
-
-            <Button type="submit" variant="indigo" className="w-fit">
-              Upload Candidates CSV
-            </Button>
-          </form>
-        </SectionCard>
-
-        <SectionCard title="Candidate List" className="space-y-4">
-          <DataTable
-            columns={candidateColumns}
-            data={paginatedCandidates}
-            keyField="id"
-            loading={loadingCandidates}
-            loadingText="Loading candidates..."
-            emptyMessage="No candidates found."
-          />
-
-          <Pagination
-            currentPage={currentPage}
-            totalItems={candidates.length}
-            pageSize={pageSize}
-            onPageChange={setCurrentPage}
-          />
-        </SectionCard>
+        <CandidateTable
+          candidates={table.candidates}
+          allCandidateCount={table.allCandidateCount}
+          loading={table.loading}
+          currentPage={table.currentPage}
+          pageSize={table.pageSize}
+          onPageChange={table.setCurrentPage}
+          onDeleteClick={table.openDeleteDialog}
+        />
       </PageCard>
 
-      <ConfirmDialog
-        open={isDeleteDialogOpen}
-        title="Delete Candidate"
-        message="Are you sure you want to delete this candidate?"
-        confirmText="Delete"
-        cancelText="Cancel"
-        confirmVariant="danger"
-        onConfirm={handleConfirmDeleteCandidate}
-        onCancel={handleCancelDeleteCandidate}
+      <DeleteCandidateDialog
+        open={deleteDialog.open}
+        onConfirm={deleteDialog.onConfirm}
+        onCancel={deleteDialog.onCancel}
       />
     </>
   );
