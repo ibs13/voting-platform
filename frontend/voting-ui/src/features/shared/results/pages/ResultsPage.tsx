@@ -78,7 +78,7 @@ export const ResultsPage = () => {
   if (error) {
     return (
       <PageShell>
-        <div className="bg-white p-8 rounded shadow-md w-[800px]">
+        <div className="bg-white p-8 rounded shadow-md md:w-[800px]">
           <h2 className="text-2xl font-bold mb-4 text-center">
             Election Results
           </h2>
@@ -99,7 +99,7 @@ export const ResultsPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 py-10 flex justify-center">
-      <div className="bg-white p-8 rounded shadow-md w-[800px]">
+      <div className="bg-white p-8 rounded shadow-md w-full md:w-[800px]">
         <h2 className="text-2xl font-bold mb-6 text-center">
           {data.electionName} - Results
         </h2>

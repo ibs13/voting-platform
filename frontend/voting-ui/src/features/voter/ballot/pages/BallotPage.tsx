@@ -61,12 +61,27 @@ export const BallotPage = () => {
   }, [isAuthReady, electionId, token, navigate]);
 
   if (!isAuthReady) {
-    return <Alert type="info">Checking session... Please wait.</Alert>;
+    return (
+      <PageShell centered className="px-4">
+        <Alert type="info">Checking session... Please wait.</Alert>
+      </PageShell>
+    );
   }
-  if (loading) return <Alert type="info">Loading ballot...</Alert>;
+
+  if (loading) {
+    return (
+      <PageShell centered className="px-4">
+        <Alert type="info">Loading ballot...</Alert>
+      </PageShell>
+    );
+  }
 
   if (pageError) {
-    return <Alert type="error">{pageError}</Alert>;
+    return (
+      <PageShell centered className="px-4">
+        <Alert type="error">{pageError}</Alert>
+      </PageShell>
+    );
   }
 
   const presidents = candidates.filter((c) => c.office === "President");
@@ -111,10 +126,11 @@ export const BallotPage = () => {
 
   return (
     <>
+      {/* <PageShell className="px-4 py-6 sm:py-10"> */}
       <PageShell>
         <form
           onSubmit={handleSubmit}
-          className="bg-white p-8 rounded shadow-md w-[600px]"
+          className="bg-white p-8 rounded shadow-md w-full  md:w-[600px] mx-auto"
         >
           <h2 className="text-2xl font-bold mb-6 text-center">
             Cast Your Vote
