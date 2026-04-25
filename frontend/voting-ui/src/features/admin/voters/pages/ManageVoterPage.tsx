@@ -11,6 +11,8 @@ import { SectionCard } from "@/shared/ui/SectionCard";
 import { DataTable } from "@/shared/ui/DataTable";
 import { ConfirmDialog } from "@/shared/ui/ConfirmDialog";
 import { getUserFriendlyErrorMessage } from "@/shared/utils/getUserFriendlyErrorMessage";
+import { Pagination } from "@/shared/ui/Pagination";
+import { usePagination } from "@/shared/hooks/usePagination";
 
 type Voter = {
   id: string;
@@ -38,6 +40,14 @@ export const ManageVoterPage = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedVoterId, setSelectedVoterId] = useState<string | null>(null);
 
+  const {
+    currentPage,
+    setCurrentPage,
+    paginatedItems: paginatedVoters,
+    resetPage,
+    pageSize,
+  } = usePagination(voters, 10);
+
   const clearFeedback = () => {
     setMessage(null);
     setError(null);
@@ -55,6 +65,7 @@ export const ManageVoterPage = () => {
         `/admin/elections/${selectedElectionId}/voters`,
       );
       setVoters(res.data as Voter[]);
+      resetPage();
     } catch (err: unknown) {
       setError(getUserFriendlyErrorMessage(err, "loadVoters"));
       setVoters([]);
@@ -290,11 +301,18 @@ export const ManageVoterPage = () => {
         <SectionCard title="Voter List" className="space-y-4">
           <DataTable
             columns={voterColumns}
-            data={voters}
+            data={paginatedVoters}
             keyField="id"
             loading={loadingVoters}
             loadingText="Loading voters..."
             emptyMessage="No voters found."
+          />
+
+          <Pagination
+            currentPage={currentPage}
+            totalItems={voters.length}
+            pageSize={pageSize}
+            onPageChange={setCurrentPage}
           />
         </SectionCard>
       </PageCard>

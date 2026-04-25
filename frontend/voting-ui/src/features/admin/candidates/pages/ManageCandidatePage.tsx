@@ -12,6 +12,8 @@ import { SectionCard } from "@/shared/ui/SectionCard";
 import { DataTable } from "@/shared/ui/DataTable";
 import { ConfirmDialog } from "@/shared/ui/ConfirmDialog";
 import { getUserFriendlyErrorMessage } from "@/shared/utils/getUserFriendlyErrorMessage";
+import { Pagination } from "@/shared/ui/Pagination";
+import { usePagination } from "@/shared/hooks/usePagination";
 
 type Candidate = {
   id: string;
@@ -41,6 +43,14 @@ export const ManageCandidatePage = () => {
     null,
   );
 
+  const {
+    currentPage,
+    setCurrentPage,
+    paginatedItems: paginatedCandidates,
+    resetPage,
+    pageSize,
+  } = usePagination(candidates, 10);
+
   const clearFeedback = () => {
     setMessage(null);
     setError(null);
@@ -58,6 +68,7 @@ export const ManageCandidatePage = () => {
         `/admin/elections/${selectedElectionId}/candidates`,
       );
       setCandidates(res.data as Candidate[]);
+      resetPage();
     } catch (err: unknown) {
       setError(getUserFriendlyErrorMessage(err, "loadCandidates"));
       setCandidates([]);
@@ -290,11 +301,18 @@ export const ManageCandidatePage = () => {
         <SectionCard title="Candidate List" className="space-y-4">
           <DataTable
             columns={candidateColumns}
-            data={candidates}
+            data={paginatedCandidates}
             keyField="id"
             loading={loadingCandidates}
             loadingText="Loading candidates..."
             emptyMessage="No candidates found."
+          />
+
+          <Pagination
+            currentPage={currentPage}
+            totalItems={candidates.length}
+            pageSize={pageSize}
+            onPageChange={setCurrentPage}
           />
         </SectionCard>
       </PageCard>

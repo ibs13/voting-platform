@@ -10,6 +10,8 @@ import { DataTable } from "@/shared/ui/DataTable";
 import { StatusBadge } from "@/shared/ui/StatusBadge";
 import { ConfirmDialog } from "@/shared/ui/ConfirmDialog";
 import { getUserFriendlyErrorMessage } from "@/shared/utils/getUserFriendlyErrorMessage";
+import { Pagination } from "@/shared/ui/Pagination";
+import { usePagination } from "@/shared/hooks/usePagination";
 
 type Election = {
   id: string;
@@ -34,6 +36,14 @@ export const ManageElectionPage = () => {
     null,
   );
 
+  const {
+    currentPage,
+    setCurrentPage,
+    paginatedItems: paginatedElections,
+    resetPage,
+    pageSize,
+  } = usePagination(elections, 10);
+
   const clearFeedback = () => {
     setMessage(null);
     setError(null);
@@ -45,6 +55,7 @@ export const ManageElectionPage = () => {
       const res = await api.get("/admin/elections");
       const loadedElections: Election[] = res.data;
       setElections(loadedElections);
+      resetPage();
     } catch (err: unknown) {
       setError(getUserFriendlyErrorMessage(err, "loadElections"));
     } finally {
@@ -186,11 +197,18 @@ export const ManageElectionPage = () => {
         <SectionCard title="Election List" className="space-y-4">
           <DataTable
             columns={electionColumns}
-            data={elections}
+            data={paginatedElections}
             keyField="id"
             loading={loadingElections}
             loadingText="Loading elections..."
             emptyMessage="No elections found."
+          />
+
+          <Pagination
+            currentPage={currentPage}
+            totalItems={elections.length}
+            pageSize={pageSize}
+            onPageChange={setCurrentPage}
           />
         </SectionCard>
       </PageCard>
