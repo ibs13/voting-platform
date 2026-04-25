@@ -3,6 +3,7 @@ import { api } from "@/shared/api/axios";
 import { Alert } from "@/shared/ui/Alert";
 import { FormInput } from "@/shared/ui/FormInput";
 import { Button } from "@/shared/ui/Button";
+import { BackButton } from "@/shared/ui/BackButton";
 import { PageCard } from "@/shared/ui/PageCard";
 import { SectionCard } from "@/shared/ui/SectionCard";
 import { DataTable } from "@/shared/ui/DataTable";
@@ -145,6 +146,7 @@ export const ManageElectionPage = () => {
   return (
     <>
       <PageCard title="Manage Elections" className="max-w-5xl space-y-8">
+        <BackButton to="/admin/dashboard" label="Back to Dashboard" />
         {message && <Alert type="success">{message}</Alert>}
         {error && <Alert type="error">{error}</Alert>}
 

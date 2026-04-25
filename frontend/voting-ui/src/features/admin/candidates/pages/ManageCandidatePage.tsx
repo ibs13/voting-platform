@@ -6,6 +6,7 @@ import { FormInput } from "@/shared/ui/FormInput";
 import { FormSelect } from "@/shared/ui/FormSelect";
 import { FormFileInput } from "@/shared/ui/FormFileInput";
 import { Button } from "@/shared/ui/Button";
+import { BackButton } from "@/shared/ui/BackButton";
 import { PageCard } from "@/shared/ui/PageCard";
 import { SectionCard } from "@/shared/ui/SectionCard";
 import { DataTable } from "@/shared/ui/DataTable";
@@ -224,6 +225,7 @@ export const ManageCandidatePage = () => {
   return (
     <>
       <PageCard title="Manage Candidates" className="max-w-5xl space-y-8">
+        <BackButton to="/admin/dashboard" label="Back to Dashboard" />
         {message && <Alert type="success">{message}</Alert>}
         {error && <Alert type="error">{error}</Alert>}
 
