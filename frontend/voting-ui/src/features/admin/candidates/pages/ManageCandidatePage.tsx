@@ -2,10 +2,10 @@ import { useParams } from "react-router-dom";
 import { BackButton } from "@/shared/ui/BackButton";
 import { PageCard } from "@/shared/ui/PageCard";
 import { PageFeedback } from "@/shared/ui/PageFeedback";
-import { AddCandidateForm } from "@/features/admin/candidates/Components/AddCandidateForm";
-import { CandidateTable } from "@/features/admin/candidates/Components/CandidateTable";
-import { DeleteCandidateDialog } from "@/features/admin/candidates/Components/DeleteCandidateDialog";
-import { UploadCandidatesCsvForm } from "@/features/admin/candidates/Components/UploadCandidatesCsvForm";
+import { AddCandidateForm } from "@/features/admin/candidates/components/AddCandidateForm";
+import { CandidateTable } from "@/features/admin/candidates/components/CandidateTable";
+import { DeleteCandidateDialog } from "@/features/admin/candidates/components/DeleteCandidateDialog";
+import { UploadCandidatesCsvForm } from "@/features/admin/candidates/components/UploadCandidatesCsvForm";
 import { useManageCandidates } from "@/features/admin/candidates/hooks/useManageCandidates";
 
 export const ManageCandidatePage = () => {
