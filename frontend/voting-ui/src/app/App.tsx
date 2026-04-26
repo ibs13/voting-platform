@@ -1,10 +1,10 @@
 import { Route, Routes } from "react-router-dom";
-import { EmailPage } from "@/features/auth/pages/EmailPage";
-import { OtpPage } from "@/features/auth/pages/OtpPage";
+import { EmailPage } from "@/features/auth/email/pages/EmailPage";
+import { OtpPage } from "@/features/auth/otp/pages/OtpPage";
 import { BallotPage } from "@/features/voter/ballot/pages/BallotPage";
 import { SuccessPage } from "@/features/voter/success/pages/SuccessPage";
 import { ResultsPage } from "@/features/shared/results/pages/ResultsPage";
-import { AdminLoginPage } from "@/features/auth/pages/AdminLoginPage";
+import { AdminLoginPage } from "@/features/auth/admin-login/pages/AdminLoginPage";
 import { AdminDashboardPage } from "@/features/admin/dashboard/pages/AdminDashboardPage";
 import { ProtectedLayout } from "@/layouts/ProtectedLayout";
 import { RoleRoute } from "@/app/routes/RoleRoute";

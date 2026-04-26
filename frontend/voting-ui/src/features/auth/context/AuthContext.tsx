@@ -1,12 +1,13 @@
 /* eslint-disable react-refresh/only-export-components */
 import {
   createContext,
-  useContext,
   useCallback,
+  useContext,
   useEffect,
+  useMemo,
   useState,
 } from "react";
-import { setAuthToken, api } from "@/shared/api/axios";
+import { api, setAuthToken } from "@/shared/api/axios";
 
 type Role = "admin" | "voter" | null;
 
@@ -35,40 +36,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const [token, setTokenState] = useState<string | null>(() => {
-    const stored = localStorage.getItem("token");
-    if (stored) {
-      setAuthToken(stored); // 🔥 set axios header immediately
+    const storedToken = localStorage.getItem("token");
+
+    if (storedToken) {
+      setAuthToken(storedToken);
     }
-    return stored;
+
+    return storedToken;
   });
 
   const [role, setRoleState] = useState<Role>(() => {
-    const stored = localStorage.getItem("role");
-    return stored === "admin" || stored === "voter" ? stored : null;
+    const storedRole = localStorage.getItem("role");
+
+    return storedRole === "admin" || storedRole === "voter" ? storedRole : null;
   });
 
   const [isAuthReady, setIsAuthReady] = useState(false);
 
-  const setElectionId = (id: string | null) => {
+  const setElectionId = useCallback((id: string | null) => {
     setElectionIdState(id);
+
     if (id) {
       localStorage.setItem("electionId", id);
     } else {
       localStorage.removeItem("electionId");
     }
-  };
+  }, []);
 
-  const setEmail = (value: string | null) => {
+  const setEmail = useCallback((value: string | null) => {
     setEmailState(value);
+
     if (value) {
       localStorage.setItem("email", value);
     } else {
       localStorage.removeItem("email");
     }
-  };
+  }, []);
 
-  const setToken = (value: string | null) => {
+  const setToken = useCallback((value: string | null) => {
     setTokenState(value);
+
     if (value) {
       localStorage.setItem("token", value);
       setAuthToken(value);
@@ -76,16 +83,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem("token");
       setAuthToken(null);
     }
-  };
+  }, []);
 
-  const setRole = (value: Role) => {
+  const setRole = useCallback((value: Role) => {
     setRoleState(value);
+
     if (value) {
       localStorage.setItem("role", value);
     } else {
       localStorage.removeItem("role");
     }
-  };
+  }, []);
 
   const logout = useCallback(() => {
     setTokenState(null);
@@ -94,9 +102,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setEmailState(null);
 
     localStorage.removeItem("token");
+    localStorage.removeItem("role");
     localStorage.removeItem("electionId");
     localStorage.removeItem("email");
-    localStorage.removeItem("role");
 
     setAuthToken(null);
   }, []);
@@ -114,29 +122,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setAuthToken(savedToken);
 
       try {
-        const res = await api.get("/auth/me");
-        const r = res.data.role as "admin" | "voter";
+        const response = await api.get("/auth/me");
+        const savedRole = response.data.role as Role;
 
-        setRoleState(r);
-        localStorage.setItem("role", r);
+        setRoleState(savedRole);
 
-        if (r === "voter") {
-          if (res.data.electionId) {
-            setElectionIdState(res.data.electionId);
-            localStorage.setItem("electionId", res.data.electionId);
-          }
-          if (res.data.email) {
-            setEmailState(res.data.email);
-            localStorage.setItem("email", res.data.email);
-          }
+        if (savedRole) {
+          localStorage.setItem("role", savedRole);
         } else {
+          localStorage.removeItem("role");
+        }
+
+        if (savedRole === "voter") {
+          if (response.data.electionId) {
+            setElectionIdState(response.data.electionId);
+            localStorage.setItem("electionId", response.data.electionId);
+          }
+
+          if (response.data.email) {
+            setEmailState(response.data.email);
+            localStorage.setItem("email", response.data.email);
+          }
+        }
+
+        if (savedRole === "admin") {
           setElectionIdState(null);
           setEmailState(null);
           localStorage.removeItem("electionId");
           localStorage.removeItem("email");
         }
       } catch {
-        // token invalid/expired
         logout();
       } finally {
         setIsAuthReady(true);
@@ -146,29 +161,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     boot();
   }, [logout]);
 
-  return (
-    <AuthContext.Provider
-      value={{
-        electionId,
-        email,
-        token,
-        role,
-        setElectionId,
-        setEmail,
-        setToken,
-        setRole,
-        isAuthReady,
-        logout,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+  const value = useMemo<AuthState>(
+    () => ({
+      electionId,
+      email,
+      token,
+      role,
+      setElectionId,
+      setEmail,
+      setToken,
+      setRole,
+      isAuthReady,
+      logout,
+    }),
+    [
+      electionId,
+      email,
+      token,
+      role,
+      setElectionId,
+      setEmail,
+      setToken,
+      setRole,
+      isAuthReady,
+      logout,
+    ],
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) throw new Error("useAuth must be used inside AuthProvider");
+
+  if (!context) {
+    throw new Error("useAuth must be used inside AuthProvider");
+  }
 
   return context;
 }
