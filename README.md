@@ -374,11 +374,20 @@ The backend validation and API contracts are the source of truth if the data mod
 
 OpenAPI is generated in development.
 
-```text
+````text
 /openapi
-```
 
 The production backend does not expose a public OpenAPI page. This keeps production cleaner and avoids exposing internal API details unnecessarily.
+
+---
+
+## API Testing
+
+A Postman collection is available under:
+
+```text
+docs/postman
+````
 
 ---
 

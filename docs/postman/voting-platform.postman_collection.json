@@ -1,0 +1,269 @@
+{
+  "info": {
+    "name": "Voting Platform API",
+    "description": "Postman collection for testing the Voting Platform admin and voter API flows.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Admin Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/admin/auth/login",
+          "host": ["{{baseUrl}}"],
+          "path": ["admin", "auth", "login"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{adminUsername}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "if (json.token) {",
+              "  pm.environment.set('adminToken', json.token);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Create Election",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/admin/elections",
+          "host": ["{{baseUrl}}"],
+          "path": ["admin", "elections"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Postman Test Election\",\n  \"startAt\": \"2026-04-26T10:00:00Z\",\n  \"endAt\": \"2026-04-30T18:00:00Z\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "if (json.id) {",
+              "  pm.environment.set('electionId', json.id);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Import Voters CSV",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/admin/elections/{{electionId}}/voters/import",
+          "host": ["{{baseUrl}}"],
+          "path": ["admin", "elections", "{{electionId}}", "voters", "import"]
+        },
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": []
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "4. Import Candidates CSV",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/admin/elections/{{electionId}}/candidates/import",
+          "host": ["{{baseUrl}}"],
+          "path": [
+            "admin",
+            "elections",
+            "{{electionId}}",
+            "candidates",
+            "import"
+          ]
+        },
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": []
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "5. Open Election",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/admin/elections/{{electionId}}/open",
+          "host": ["{{baseUrl}}"],
+          "path": ["admin", "elections", "{{electionId}}", "open"]
+        }
+      }
+    },
+    {
+      "name": "6. Request Voter OTP",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/auth/request-otp",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "request-otp"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{voterEmail}}\"\n}"
+        }
+      }
+    },
+    {
+      "name": "7. Verify OTP",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/auth/verify-otp",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "verify-otp"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"electionId\": \"{{electionId}}\",\n  \"email\": \"{{voterEmail}}\",\n  \"otp\": \"{{otp}}\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "if (json.token) {",
+              "  pm.environment.set('voterToken', json.token);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Submit Ballot",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{voterToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/votes/cast",
+          "host": ["{{baseUrl}}"],
+          "path": ["votes", "cast"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"electionId\": \"{{electionId}}\",\n  \"votes\": [\n    {\n      \"office\": \"President\",\n      \"candidateId\": \"{{presidentCandidateId}}\"\n    },\n    {\n      \"office\": \"Secretary\",\n      \"candidateId\": \"{{secretaryCandidateId}}\"\n    },\n    {\n      \"office\": \"Treasurer\",\n      \"candidateId\": \"{{treasurerCandidateId}}\"\n    }\n  ]\n}"
+        }
+      }
+    },
+    {
+      "name": "9. Close Election",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/admin/elections/{{electionId}}/close",
+          "host": ["{{baseUrl}}"],
+          "path": ["admin", "elections", "{{electionId}}", "close"]
+        }
+      }
+    },
+    {
+      "name": "10. View Results",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/results/{{electionId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["results", "{{electionId}}"]
+        }
+      }
+    }
+  ]
+}
