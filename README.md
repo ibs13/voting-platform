@@ -174,6 +174,8 @@ voting-platform/
 │       └── vite.config.ts
 │
 ├── docs/
+│   ├── architecture/               # Architecture diagram
+│   ├── postman/                    # Postman collection and environment
 │   └── screenshots/                # README screenshots
 ├── .env.example                    # Production-style environment variable template
 ├── docker-compose.yml
@@ -382,6 +384,32 @@ The production backend does not expose a public OpenAPI page. This keeps product
 
 ---
 
+## API Testing
+
+A Postman collection is available under `docs/postman`.
+
+Files:
+
+- `docs/postman/voting-platform.postman_collection.json`
+- `docs/postman/voting-platform.postman_environment.json`
+
+Recommended test flow:
+
+1. Admin login
+2. Create election
+3. Import voters
+4. Import candidates
+5. Open election
+6. Request voter OTP
+7. Verify OTP
+8. Submit ballot
+9. Close election
+10. View results
+
+Before running the collection, update the Postman environment values for local testing, especially `baseUrl`, `adminUsername`, `adminPassword`, `voterEmail`, `otp`, and candidate IDs.
+
+---
+
 ## Docker Compose
 
 A `docker-compose.yml` file is included for local container-based setup.
@@ -463,7 +491,7 @@ Planned or useful future improvements:
 - Add more screenshots or GIFs for important user flows
 - Add sample CSV files under a `samples/` or `docs/` folder
 - Add a simple architecture diagram
-- Add a Postman collection
+- Improve the Postman collection as the API grows
 - Add backend pagination for larger voter/candidate datasets
 - Add stronger result visualization
 - Add more automated tests
