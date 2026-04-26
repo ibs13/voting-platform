@@ -6,6 +6,10 @@ The platform provides separate admin and voter flows. Admins can manage election
 
 Built with **ASP.NET Core Web API**, **React**, **TypeScript**, and **PostgreSQL**.
 
+[![Backend CI](https://github.com/ibs13/voting-platform/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/ibs13/voting-platform/actions/workflows/backend-ci.yml)
+[![Frontend CI](https://github.com/ibs13/voting-platform/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/ibs13/voting-platform/actions/workflows/frontend-ci.yml)
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+
 ---
 
 ## Live Demo
@@ -65,6 +69,19 @@ A high-level overview of the application architecture:
 | Manage Voters                                        | Election Results                                           |
 | ---------------------------------------------------- | ---------------------------------------------------------- |
 | ![Manage Voters](docs/screenshots/manage-voters.png) | ![Election Results](docs/screenshots/election-results.png) |
+
+---
+
+## Project Highlights
+
+- Production-style full-stack application with separate admin and voter flows
+- JWT authentication for admins and OTP-based authentication for voters
+- Secret ballot design with server-side duplicate vote prevention
+- CSV import for voters and candidates
+- PostgreSQL database with EF Core migrations
+- Docker Compose setup for local development
+- CI workflows for backend and frontend
+- Deployed with Railway and Netlify
 
 ---
 
