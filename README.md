@@ -371,6 +371,15 @@ fullname,session,department,office
 
 The backend validation rules and API contracts are the source of truth if the data model changes.
 
+### Sample CSV Files
+
+Sample CSV files are included for local testing:
+
+```text
+docs/samples/sample-voters.csv
+docs/samples/sample-candidates.csv
+```
+
 ---
 
 ## API Reference
@@ -486,8 +495,6 @@ This project is currently focused on:
 
 Planned improvements:
 
-- Add more screenshots or GIFs for important user flows
-- Add sample CSV files under a `samples/` or `docs/` folder
 - Add backend pagination for larger voter and candidate datasets
 - Add stronger result visualization
 - Add automated backend tests
