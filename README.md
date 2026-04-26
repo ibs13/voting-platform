@@ -17,6 +17,24 @@ Built with **ASP.NET Core Web API** on the backend and **React + TypeScript** on
 
 ---
 
+## Demo Access
+
+The live demo is available here:
+
+[https://votingplatform2026.netlify.app/](https://votingplatform2026.netlify.app/)
+
+For security reasons, production credentials are not committed to the repository.
+
+To test locally:
+
+1. Run the backend and frontend.
+2. Seed development data.
+3. Use the seeded admin account from local configuration.
+4. Use a seeded voter email to request OTP.
+5. In development, OTP can be checked from the backend console/logs.
+
+---
+
 ## Screenshots
 
 ### Voter Flow
