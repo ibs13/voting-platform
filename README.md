@@ -35,30 +35,38 @@ To test locally:
 
 ---
 
+## Architecture Diagram
+
+A high-level overview of the application architecture:
+
+![Voting Platform Architecture](docs/architecture/voting-platform-architecture.png)
+
+---
+
 ## Screenshots
 
 ### Voter Flow
 
-| Email Login | OTP Verification |
-|---|---|
+| Email Login                                                  | OTP Verification                                     |
+| ------------------------------------------------------------ | ---------------------------------------------------- |
 | ![Voter Email Login](docs/screenshots/voter-email-login.png) | ![OTP Verification](docs/screenshots/verify-otp.png) |
 
-| Ballot | Vote Success |
-|---|---|
+| Ballot                                           | Vote Success                                       |
+| ------------------------------------------------ | -------------------------------------------------- |
 | ![Ballot Page](docs/screenshots/ballot-page.png) | ![Vote Success](docs/screenshots/vote-success.png) |
 
 ### Admin Flow
 
-| Admin Login | Admin Dashboard |
-|---|---|
+| Admin Login                                      | Admin Dashboard                                          |
+| ------------------------------------------------ | -------------------------------------------------------- |
 | ![Admin Login](docs/screenshots/admin-login.png) | ![Admin Dashboard](docs/screenshots/admin-dashboard.png) |
 
-| Manage Elections | Manage Candidates |
-|---|---|
+| Manage Elections                                           | Manage Candidates                                            |
+| ---------------------------------------------------------- | ------------------------------------------------------------ |
 | ![Manage Elections](docs/screenshots/manage-elections.png) | ![Manage Candidates](docs/screenshots/manage-candidates.png) |
 
-| Manage Voters | Election Results |
-|---|---|
+| Manage Voters                                        | Election Results                                           |
+| ---------------------------------------------------- | ---------------------------------------------------------- |
 | ![Manage Voters](docs/screenshots/manage-voters.png) | ![Election Results](docs/screenshots/election-results.png) |
 
 ---
