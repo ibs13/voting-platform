@@ -174,6 +174,8 @@ voting-platform/
 │       └── vite.config.ts
 │
 ├── docs/
+│   ├── architecture/               # Architecture diagram
+│   ├── postman/                    # Postman collection and environment
 │   └── screenshots/                # README screenshots
 ├── .env.example                    # Production-style environment variable template
 ├── docker-compose.yml
