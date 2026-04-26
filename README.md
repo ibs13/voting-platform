@@ -1,10 +1,10 @@
 # Voting Platform
 
-A full-stack election platform for managing small organization elections with separate admin and voter flows.
+A full-stack election management platform for small organizations, alumni associations, clubs, and similar groups.
 
-The platform supports election management, candidate and voter management, CSV import, OTP-based voter login, secret ballot submission, turnout tracking, and results publishing after an election is closed.
+The platform provides separate admin and voter flows. Admins can manage elections, candidates, voters, CSV imports, turnout tracking, and results publishing. Voters can log in with email OTP, access an active ballot, vote once, and view results only after the election is closed.
 
-Built with **ASP.NET Core Web API** on the backend and **React + TypeScript** on the frontend.
+Built with **ASP.NET Core Web API**, **React**, **TypeScript**, and **PostgreSQL**.
 
 ---
 
@@ -19,19 +19,16 @@ Built with **ASP.NET Core Web API** on the backend and **React + TypeScript** on
 
 ## Demo Access
 
-The live demo is available here:
-
-[https://votingplatform2026.netlify.app/](https://votingplatform2026.netlify.app/)
-
 For security reasons, production credentials are not committed to the repository.
 
-To test locally:
+To test the project locally:
 
 1. Run the backend and frontend.
-2. Seed development data.
-3. Use the seeded admin account from local configuration.
-4. Use a seeded voter email to request OTP.
-5. In development, OTP can be checked from the backend console/logs.
+2. Apply database migrations.
+3. Seed development data.
+4. Use the seeded admin account from local configuration.
+5. Use a seeded voter email to request an OTP.
+6. In development, the OTP can be checked from the backend console/logs.
 
 ---
 
@@ -73,27 +70,28 @@ A high-level overview of the application architecture:
 
 ## Key Features
 
-### Admin Flow
+### Admin Features
 
-- Admin login with JWT authentication
+- JWT-based admin authentication
 - Create and manage elections
 - Add candidates manually
 - Add voters manually
-- Upload candidates by CSV
-- Upload voters by CSV
+- Import candidates from CSV
+- Import voters from CSV
 - View paginated election, candidate, and voter lists
 - Open and close elections
 - Track voter turnout
-- View results after an election is closed
+- Publish results only after an election is closed
 
-### Voter Flow
+### Voter Features
 
-- Login with email OTP
-- Access the active election ballot
-- Vote once per office
-- Prevent duplicate voting
-- View results only after the election is closed
-- Mobile-friendly voting flow
+- Email-based OTP login
+- Access to the active election ballot
+- One-time ballot submission
+- Server-side duplicate vote prevention
+- Results hidden while the election is open
+- Results visible after the election is closed
+- Mobile-friendly voting experience
 
 ---
 
@@ -101,7 +99,7 @@ A high-level overview of the application architecture:
 
 - A voter can submit only one ballot per election.
 - A voter must vote for one candidate per office.
-- Results are hidden while the election is open.
+- Results remain hidden while the election is open.
 - Results become visible only after the election is closed.
 - Duplicate voting is prevented on the server side.
 - Ballot submission is separated from voter identity to support secret voting.
@@ -130,7 +128,7 @@ A high-level overview of the application architecture:
 - Axios
 - Tailwind CSS
 
-### DevOps
+### DevOps and Deployment
 
 - Docker Compose
 - GitHub Actions CI
@@ -153,23 +151,25 @@ voting-platform/
 │   │   ├── Controllers/            # API endpoints
 │   │   ├── Domain/                 # Entities and enums
 │   │   ├── Extensions/             # Service registration and config extensions
-│   │   ├── Infrastructure/         # DbContext, persistence, email, auth services
+│   │   ├── Infrastructure/         # DbContext, persistence, email, and auth services
 │   │   ├── Migrations/             # EF Core migrations
 │   │   ├── Program.cs
 │   │   └── Voting.Api.csproj
+│   │
 │   └── VotingPlatform.slnx
 │
 ├── frontend/
 │   └── voting-ui/
 │       ├── src/
-│       │   ├── app/                # App-level routing/setup
+│       │   ├── app/                # App-level routing and setup
 │       │   ├── features/           # Feature-based frontend modules
 │       │   │   ├── admin/          # Admin dashboard and management pages
-│       │   │   ├── auth/           # Admin login, voter email login, OTP, auth context
+│       │   │   ├── auth/           # Login, OTP, and auth context
 │       │   │   ├── results/        # Election results flow
 │       │   │   └── voter/          # Ballot flow
 │       │   ├── layouts/            # Shared layouts
-│       │   └── shared/             # Shared API, UI components, hooks, utils
+│       │   └── shared/             # Shared API, UI components, hooks, and utilities
+│       │
 │       ├── package.json
 │       └── vite.config.ts
 │
@@ -177,7 +177,8 @@ voting-platform/
 │   ├── architecture/               # Architecture diagram
 │   ├── postman/                    # Postman collection and environment
 │   └── screenshots/                # README screenshots
-├── .env.example                    # Production-style environment variable template
+│
+├── .env.example                    # Environment variable template
 ├── docker-compose.yml
 └── README.md
 ```
@@ -203,28 +204,28 @@ features/admin/candidates/
 └── types/
 ```
 
-This keeps responsibilities separated:
+This structure keeps the frontend easier to maintain:
 
-- `api/` contains backend calls
-- `hooks/` contain feature state and actions
+- `api/` contains backend API calls
+- `hooks/` contain feature-specific state and actions
 - `components/` contain feature-specific UI
-- `pages/` compose the page
+- `pages/` compose full pages
 - `types/` contain TypeScript contracts
-- `shared/ui/` contains reusable components such as buttons, cards, alerts, tables, pagination, and dialogs
+- `shared/ui/` contains reusable UI components such as buttons, cards, alerts, tables, pagination, and dialogs
 
 ---
 
 ## Backend Architecture
 
-The backend is organized around clear API, domain, and infrastructure boundaries:
+The backend is organized around API, domain, and infrastructure boundaries:
 
 - `Controllers/` expose HTTP endpoints
 - `Contracts/` define request and response models
 - `Domain/` contains entities and enums
-- `Infrastructure/` contains persistence, services, email delivery, and database concerns
+- `Infrastructure/` contains persistence, services, authentication, email delivery, and database concerns
 - `Extensions/` keeps `Program.cs` clean by grouping service registration
 
-The backend uses environment-based configuration for database, JWT, CORS, OTP, email, and seed behavior.
+The backend uses environment-based configuration for database connection, JWT, CORS, OTP, email, and seed behavior.
 
 ---
 
@@ -236,14 +237,14 @@ The backend uses environment-based configuration for database, JWT, CORS, OTP, e
 2. Admin creates an election.
 3. Admin adds candidates and voters manually or by CSV upload.
 4. Admin opens the election.
-5. Admin monitors turnout.
+5. Admin monitors voter turnout.
 6. Admin closes the election.
 7. Results become available.
 
 ### Voter Flow
 
 1. Voter enters their email.
-2. System sends an OTP.
+2. The system sends an OTP.
 3. Voter verifies the OTP.
 4. Voter accesses the ballot.
 5. Voter submits votes for all offices.
@@ -287,7 +288,7 @@ In development, OpenAPI is available at:
 /openapi
 ```
 
-The backend configuration should be provided through environment variables or local user secrets.
+Backend configuration should be provided through environment variables or local user secrets.
 
 Minimum required backend values:
 
@@ -310,8 +311,8 @@ npm run dev
 Useful frontend scripts:
 
 ```bash
-npm run dev       # start local dev server
-npm run build     # TypeScript build + Vite production build
+npm run dev       # start local development server
+npm run build     # run TypeScript build and Vite production build
 npm run lint      # run ESLint
 npm run preview   # preview production build locally
 ```
@@ -348,13 +349,13 @@ Email__SenderName
 Email__SmtpUseStartTls
 ```
 
-Never commit real secrets or production credentials.
+Never commit real secrets, database URLs, SMTP credentials, JWT secrets, or production credentials.
 
 ---
 
 ## CSV Import
 
-The admin can upload voters and candidates by CSV.
+Admins can upload voters and candidates by CSV.
 
 Expected voter CSV columns:
 
@@ -368,7 +369,7 @@ Expected candidate CSV columns:
 fullname,session,department,office
 ```
 
-The backend validation and API contracts are the source of truth if the data model changes.
+The backend validation rules and API contracts are the source of truth if the data model changes.
 
 ---
 
@@ -376,8 +377,9 @@ The backend validation and API contracts are the source of truth if the data mod
 
 OpenAPI is generated in development.
 
-````text
+```text
 /openapi
+```
 
 The production backend does not expose a public OpenAPI page. This keeps production cleaner and avoids exposing internal API details unnecessarily.
 
@@ -389,7 +391,20 @@ A Postman collection is available under:
 
 ```text
 docs/postman
-````
+```
+
+Recommended manual API testing flow:
+
+1. Admin login
+2. Create election
+3. Add or import candidates
+4. Add or import voters
+5. Open election
+6. Request voter OTP
+7. Verify voter OTP
+8. Submit ballot
+9. Close election
+10. View results
 
 ---
 
@@ -403,7 +418,7 @@ Typical usage:
 docker compose up --build
 ```
 
-The compose setup is intended for local development and production-style testing.
+The Compose setup is intended for local development and production-style testing.
 
 ---
 
@@ -463,21 +478,21 @@ This project is currently focused on:
 - role-based separation between admin and voter flows
 - production-ready environment configuration
 - safer deployment setup
-- clear portfolio-level architecture
+- clear portfolio-level documentation
 
 ---
 
 ## Recommended Future Improvements
 
-Planned or useful future improvements:
+Planned improvements:
 
 - Add more screenshots or GIFs for important user flows
 - Add sample CSV files under a `samples/` or `docs/` folder
-- Add a simple architecture diagram
-- Add a Postman collection
-- Add backend pagination for larger voter/candidate datasets
+- Add backend pagination for larger voter and candidate datasets
 - Add stronger result visualization
-- Add more automated tests
+- Add automated backend tests
+- Add automated frontend tests
+- Add a public demo guide with safe demo data
 
 ---
 
