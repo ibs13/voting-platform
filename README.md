@@ -1,46 +1,56 @@
 # Voting Platform
 
-A full-stack election platform with separate admin and voter flows, OTP-based voter login, CSV import for election data, turnout tracking, and results publishing after an election is closed.
+A full-stack election platform for managing small organization elections with separate admin and voter flows.
 
-Built with ASP.NET Core Web API on the backend and React + TypeScript on the frontend.
+The platform supports election management, candidate and voter management, CSV import, OTP-based voter login, secret ballot submission, turnout tracking, and results publishing after an election is closed.
+
+Built with **ASP.NET Core Web API** on the backend and **React + TypeScript** on the frontend.
 
 ---
 
 ## Live Demo
 
-- Frontend App: [Open App](https://votingplatform2026.netlify.app/)
-- Backend API: [Railway Backend](https://voting-platform-production.up.railway.app/)
+- Frontend App: [https://votingplatform2026.netlify.app/](https://votingplatform2026.netlify.app/)
+- Backend API: [https://voting-platform-production.up.railway.app/](https://voting-platform-production.up.railway.app/)
 
-> Note: OpenAPI is available in development only and is not exposed publicly in production..
+> OpenAPI is available in development only. It is intentionally not exposed as a public production documentation page.
 
 ---
 
-## Features
+## Key Features
 
-### Admin
+### Admin Flow
 
+- Admin login with JWT authentication
 - Create and manage elections
-- Add candidates and voters manually or through CSV upload
-- View candidate and voter lists
-- Track turnout during an active election
+- Add candidates manually
+- Add voters manually
+- Upload candidates by CSV
+- Upload voters by CSV
+- View paginated election, candidate, and voter lists
 - Open and close elections
-- Publish results after election close
+- Track voter turnout
+- View results after an election is closed
 
-### Voter
+### Voter Flow
 
-- Sign in with email OTP
-- Access the ballot for the active election
+- Login with email OTP
+- Access the active election ballot
 - Vote once per office
-- View results only after the election has been closed
+- Prevent duplicate voting
+- View results only after the election is closed
+- Mobile-friendly voting flow
 
 ---
 
-## Core Rules
+## Core Election Rules
 
-- Each voter can submit only one ballot for an election
-- A voter can vote once per office
-- Results stay hidden until the election is closed
-- Server-side checks prevent duplicate voting
+- A voter can submit only one ballot per election.
+- A voter must vote for one candidate per office.
+- Results are hidden while the election is open.
+- Results become visible only after the election is closed.
+- Duplicate voting is prevented on the server side.
+- Ballot submission is separated from voter identity to support secret voting.
 
 ---
 
@@ -48,11 +58,14 @@ Built with ASP.NET Core Web API on the backend and React + TypeScript on the fro
 
 ### Backend
 
-- ASP.NET Core Web API (.NET 10)
+- ASP.NET Core Web API
+- .NET 10
 - Entity Framework Core
-- PostgreSQL in deployment
+- PostgreSQL
 - JWT authentication
+- BCrypt password hashing
 - SMTP email delivery for OTP
+- OpenAPI in development
 
 ### Frontend
 
@@ -66,7 +79,9 @@ Built with ASP.NET Core Web API on the backend and React + TypeScript on the fro
 ### DevOps
 
 - Docker Compose
-- GitHub Actions
+- GitHub Actions CI
+- Railway backend deployment
+- Netlify frontend deployment
 
 ---
 
@@ -74,57 +89,108 @@ Built with ASP.NET Core Web API on the backend and React + TypeScript on the fro
 
 ```text
 voting-platform/
-├── .github/workflows/        # CI workflows
+├── .github/
+│   └── workflows/                  # CI workflows
+│
 ├── backend/
 │   ├── Voting.Api/
-│   │   ├── Common/           # Shared helpers and constants
-│   │   ├── Contracts/        # Request/response models
-│   │   ├── Controllers/      # API endpoints
-│   │   ├── Domain/           # Core entities and enums
-│   │   ├── Extensions/       # Service registration/config helpers
-│   │   ├── Infrastructure/   # DbContext, services, persistence concerns
-│   │   ├── Migrations/
+│   │   ├── Common/                 # Shared helpers and constants
+│   │   ├── Contracts/              # Request and response DTOs
+│   │   ├── Controllers/            # API endpoints
+│   │   ├── Domain/                 # Entities and enums
+│   │   ├── Extensions/             # Service registration and config extensions
+│   │   ├── Infrastructure/         # DbContext, persistence, email, auth services
+│   │   ├── Migrations/             # EF Core migrations
 │   │   ├── Program.cs
 │   │   └── Voting.Api.csproj
 │   └── VotingPlatform.slnx
+│
 ├── frontend/
 │   └── voting-ui/
 │       ├── src/
-│       │   ├── api/
-│       │   ├── components/
-│       │   ├── contexts/
-│       │   ├── layouts/
-│       │   ├── pages/
-│       │   ├── routes/
-│       │   └── utils/
-│       └── package.json
-├── .env.example
+│       │   ├── app/                # App-level routing/setup
+│       │   ├── features/           # Feature-based frontend modules
+│       │   │   ├── admin/          # Admin dashboard and management pages
+│       │   │   ├── auth/           # Admin login, voter email login, OTP, auth context
+│       │   │   ├── results/        # Election results flow
+│       │   │   └── voter/          # Ballot flow
+│       │   ├── layouts/            # Shared layouts
+│       │   └── shared/             # Shared API, UI components, hooks, utils
+│       ├── package.json
+│       └── vite.config.ts
+│
+├── .env.example                    # Production-style environment variable template
 ├── docker-compose.yml
 └── README.md
 ```
 
 ---
 
-## How It Works
+## Frontend Architecture
 
-### Admin flow
+The frontend follows a feature-based structure. Most major features use this pattern:
 
-1. Admin signs in
-2. Admin creates an election
-3. Admin adds candidates and voters
-4. Admin opens the election
-5. Admin monitors turnout
-6. Admin closes the election
-7. Results become visible
+```text
+types -> api -> hooks -> components -> pages
+```
 
-### Voter flow
+Example:
 
-1. Voter enters email
-2. System sends OTP
-3. Voter verifies OTP
-4. Voter accesses ballot
-5. Voter submits votes
-6. Voter can view results after the election closes
+```text
+features/admin/candidates/
+├── api/
+├── components/
+├── hooks/
+├── pages/
+└── types/
+```
+
+This keeps responsibilities separated:
+
+- `api/` contains backend calls
+- `hooks/` contain feature state and actions
+- `components/` contain feature-specific UI
+- `pages/` compose the page
+- `types/` contain TypeScript contracts
+- `shared/ui/` contains reusable components such as buttons, cards, alerts, tables, pagination, and dialogs
+
+---
+
+## Backend Architecture
+
+The backend is organized around clear API, domain, and infrastructure boundaries:
+
+- `Controllers/` expose HTTP endpoints
+- `Contracts/` define request and response models
+- `Domain/` contains entities and enums
+- `Infrastructure/` contains persistence, services, email delivery, and database concerns
+- `Extensions/` keeps `Program.cs` clean by grouping service registration
+
+The backend uses environment-based configuration for database, JWT, CORS, OTP, email, and seed behavior.
+
+---
+
+## How the Application Works
+
+### Admin Flow
+
+1. Admin logs in.
+2. Admin creates an election.
+3. Admin adds candidates and voters manually or by CSV upload.
+4. Admin opens the election.
+5. Admin monitors turnout.
+6. Admin closes the election.
+7. Results become available.
+
+### Voter Flow
+
+1. Voter enters their email.
+2. System sends an OTP.
+3. Voter verifies the OTP.
+4. Voter accesses the ballot.
+5. Voter submits votes for all offices.
+6. Voter is redirected to the success page.
+7. Voter can view results after the election is closed.
 
 ---
 
@@ -133,8 +199,11 @@ voting-platform/
 ### Prerequisites
 
 - .NET 10 SDK
-- Node.js 20+
-- PostgreSQL if you want to run with the current deployment-style database setup
+- Node.js 20 or newer
+- PostgreSQL
+- Docker, optional but recommended
+
+---
 
 ### 1. Clone the repository
 
@@ -143,33 +212,34 @@ git clone https://github.com/ibs13/voting-platform.git
 cd voting-platform
 ```
 
+---
+
 ### 2. Backend setup
 
 ```bash
 cd backend/Voting.Api
-```
-
-Set your local secrets or environment variables for backend configuration.
-
-Minimum required values:
-
-- `ConnectionStrings__Default`
-- `Jwt__Key`
-- `Cors__AllowedOrigins__0`
-
-Example local run:
-
-```bash
 dotnet restore
 dotnet ef database update
 dotnet run
 ```
 
-The API runs on the backend port configured by ASP.NET Core. In development, OpenAPI is available at:
+In development, OpenAPI is available at:
 
 ```text
 /openapi
 ```
+
+The backend configuration should be provided through environment variables or local user secrets.
+
+Minimum required backend values:
+
+```text
+ConnectionStrings__Default
+Jwt__Key
+Cors__AllowedOrigins__0
+```
+
+---
 
 ### 3. Frontend setup
 
@@ -179,116 +249,168 @@ npm install
 npm run dev
 ```
 
+Useful frontend scripts:
+
+```bash
+npm run dev       # start local dev server
+npm run build     # TypeScript build + Vite production build
+npm run lint      # run ESLint
+npm run preview   # preview production build locally
+```
+
 ---
 
 ## Environment Variables
 
-The project includes a root `.env.example` file for production-style configuration.
+The repository includes a root `.env.example` file for production-style configuration.
 
-### Backend
+### Backend variables
 
-- `ASPNETCORE_ENVIRONMENT`
-- `ASPNETCORE_URLS`
-- `ConnectionStrings__Default`
-- `Jwt__Key`
-- `Jwt__Issuer`
-- `Jwt__Audience`
-- `Jwt__VoterTokenMinutes`
-- `Jwt__AdminTokenHours`
-- `Cors__AllowedOrigins__0`
-- `Otp__ExpiryMinutes`
-- `Otp__MaxAttempts`
-- `Election__TimeZone`
-- `Seed__RunOnStartup`
-- `Email__Provider`
-- `Email__SmtpHost`
-- `Email__SmtpPort`
-- `Email__SmtpUsername`
-- `Email__SmtpPassword`
-- `Email__SenderEmail`
-- `Email__SenderName`
-- `Email__SmtpUseStartTls`
-
-Do not commit real secrets.
-
----
-
-## Docker Compose
-
-A `docker-compose.yml` file is included for local infrastructure and API startup.
-
-It currently defines:
-
-- PostgreSQL
-- ASP.NET Core API service
-
-Typical use:
-
-```bash
-docker compose up --build
+```text
+ASPNETCORE_ENVIRONMENT
+ASPNETCORE_URLS
+ConnectionStrings__Default
+Jwt__Key
+Jwt__Issuer
+Jwt__Audience
+Jwt__VoterTokenMinutes
+Jwt__AdminTokenHours
+Cors__AllowedOrigins__0
+Otp__ExpiryMinutes
+Otp__MaxAttempts
+Election__TimeZone
+Seed__RunOnStartup
+Email__Provider
+Email__SmtpHost
+Email__SmtpPort
+Email__SmtpUsername
+Email__SmtpPassword
+Email__SenderEmail
+Email__SenderName
+Email__SmtpUseStartTls
 ```
+
+Never commit real secrets or production credentials.
 
 ---
 
 ## CSV Import
 
-The platform supports CSV upload for candidates and voters from the admin side.
+The admin can upload voters and candidates by CSV.
 
-Because import columns can change as the data model evolves, treat the backend validation and current API contract as the source of truth.
+Expected voter CSV columns:
 
-Suggested practice:
+```text
+email,name,session,department
+```
 
-- keep sample CSV files in the repo later if you want easier onboarding
-- document the exact headers beside the upload UI or in a dedicated `docs/` folder
+Expected candidate CSV columns:
+
+```text
+fullname,session,department,office
+```
+
+The backend validation and API contracts are the source of truth if the data model changes.
 
 ---
 
 ## API Reference
 
-This project exposes OpenAPI documentation in development. Instead of maintaining a long manual route table in the README, use the generated API spec as the source of truth:
+OpenAPI is generated in development.
 
 ```text
 /openapi
 ```
 
-That keeps the documentation aligned with the code when endpoints change.
+The production backend does not expose a public OpenAPI page. This keeps production cleaner and avoids exposing internal API details unnecessarily.
+
+---
+
+## Docker Compose
+
+A `docker-compose.yml` file is included for local container-based setup.
+
+Typical usage:
+
+```bash
+docker compose up --build
+```
+
+The compose setup is intended for local development and production-style testing.
 
 ---
 
 ## Deployment Notes
 
-This project is structured for containerized deployment.
+Before deploying, verify:
 
-Before deploying, verify these items:
+- PostgreSQL connection string is configured
+- JWT secret is configured and strong enough
+- CORS origin points to the real frontend domain
+- SMTP credentials are configured for OTP delivery
+- seed behavior is disabled unless intentionally needed
+- frontend API base URL points to the deployed backend
 
-- production database connection string is set
-- JWT secret is set
-- CORS is set to the real frontend domain
-- SMTP settings are configured for OTP delivery
-- seed behavior is disabled unless you explicitly want it
+Current deployment targets:
+
+- Backend: Railway
+- Frontend: Netlify
 
 ---
 
-## Current Focus of the Codebase
+## Development Notes
 
-This repository is organized around:
+### Path casing matters
 
-- clearer backend layering
-- cleaner request and response contracts
+GitHub Actions runs on Linux, so folder and file casing must match imports exactly.
+
+For example, this import:
+
+```ts
+import { CandidateTable } from "@/features/admin/candidates/components/CandidateTable";
+```
+
+requires the folder to be named exactly:
+
+```text
+components
+```
+
+not:
+
+```text
+Components
+```
+
+This is especially important when developing on Windows, where local builds may pass even if casing is wrong.
+
+---
+
+## Current Codebase Focus
+
+This project is currently focused on:
+
+- cleaner backend layering
+- feature-based frontend structure
+- reusable frontend UI components
 - role-based separation between admin and voter flows
-- environment-based configuration for production deployment
+- production-ready environment configuration
+- safer deployment setup
+- clear portfolio-level architecture
 
 ---
 
-## Recommended Next README Improvements
+## Recommended Future Improvements
 
-Later, you can make this README even stronger by adding:
+Planned or useful future improvements:
 
-- screenshots or GIFs of admin and voter flows
-- sample CSV files in a `docs/` or `samples/` folder
-- a short architecture diagram
-- deployment steps for Railway
-- Postman collection link or export
+- Add screenshots or GIFs for admin and voter flows
+- Add sample CSV files under a `samples/` or `docs/` folder
+- Add a simple architecture diagram
+- Add a Postman collection
+- Add backend pagination for larger voter/candidate datasets
+- Add stronger result visualization
+- Add more automated tests
 
 ---
 
