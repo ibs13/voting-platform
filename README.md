@@ -17,6 +17,34 @@ Built with **ASP.NET Core Web API** on the backend and **React + TypeScript** on
 
 ---
 
+## Screenshots
+
+### Voter Flow
+
+| Email Login | OTP Verification |
+|---|---|
+| ![Voter Email Login](docs/screenshots/voter-email-login.png) | ![OTP Verification](docs/screenshots/verify-otp.png) |
+
+| Ballot | Vote Success |
+|---|---|
+| ![Ballot Page](docs/screenshots/ballot-page.png) | ![Vote Success](docs/screenshots/vote-success.png) |
+
+### Admin Flow
+
+| Admin Login | Admin Dashboard |
+|---|---|
+| ![Admin Login](docs/screenshots/admin-login.png) | ![Admin Dashboard](docs/screenshots/admin-dashboard.png) |
+
+| Manage Elections | Manage Candidates |
+|---|---|
+| ![Manage Elections](docs/screenshots/manage-elections.png) | ![Manage Candidates](docs/screenshots/manage-candidates.png) |
+
+| Manage Voters | Election Results |
+|---|---|
+| ![Manage Voters](docs/screenshots/manage-voters.png) | ![Election Results](docs/screenshots/election-results.png) |
+
+---
+
 ## Key Features
 
 ### Admin Flow
@@ -119,6 +147,8 @@ voting-platform/
 │       ├── package.json
 │       └── vite.config.ts
 │
+├── docs/
+│   └── screenshots/                # README screenshots
 ├── .env.example                    # Production-style environment variable template
 ├── docker-compose.yml
 └── README.md
@@ -404,7 +434,7 @@ This project is currently focused on:
 
 Planned or useful future improvements:
 
-- Add screenshots or GIFs for admin and voter flows
+- Add more screenshots or GIFs for important user flows
 - Add sample CSV files under a `samples/` or `docs/` folder
 - Add a simple architecture diagram
 - Add a Postman collection
